@@ -2,19 +2,19 @@ const CACHE_NAME = "my-cache-v1";
 
 // List of assets to precache
 const PRECACHE_ASSETS = [
-  '/CC/',
-  '/CC/index.html',
-  '/CC/style.css',
-  '/CC/script.js',
-  '/CC/db.json',
-  '/CC/f16.glb',
-  '/CC/three.js',
-  '/CC/Orbit.js',
-  '/CC/Loader.js',
-  '/CC/781a.png',
-  '/CC/781H-images-0.jpg',
-  '/CC/781H-images-1.jpg',
-  '/CC/icon.jpg',
+  '/reference/',
+  '/reference/index.html',
+  '/reference/style.css',
+  '/reference/script.js',
+  '/reference/db.json',
+  '/reference/f16.glb',
+  '/reference/three.js',
+  '/reference/Orbit.js',
+  '/reference/Loader.js',
+  '/reference/781a.png',
+  '/reference/781H-images-0.jpg',
+  '/reference/781H-images-1.jpg',
+  '/reference/icon.jpg',
   ''
 ];
 
@@ -56,3 +56,4 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
