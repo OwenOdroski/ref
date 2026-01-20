@@ -1,4 +1,4 @@
-const version = "v0.1"
+const version = "v0.2"
 if (!self.define) {
     let e, s = {};
     const i = (i, n) => (i = new URL(i + ".js",n).href,
@@ -86,3 +86,4 @@ define(["./workbox"], function(e) {
     e.cleanupOutdatedCaches(),
     e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))
 });
+
