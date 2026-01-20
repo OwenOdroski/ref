@@ -2,7 +2,7 @@
 let register = true
 if ('serviceWorker' in navigator && register) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/ref/sw.js')
       .then(reg => {
         console.log('✅ Service Worker registered with scope:', reg.scope);
       })
@@ -17,7 +17,7 @@ let forms
 let ref
 let notes
 let checklists
-fetch('/db.json')
+fetch('/ref/db.json')
   .then(res => res.json())
   .then(data => {
     forms = data.forms
@@ -161,7 +161,7 @@ function startPanelScreen() {
     //   });
 
     const loader = new THREE.GLTFLoader();
-    loader.load('/f16.glb', (gltf) => {
+    loader.load('/ref/f16.glb', (gltf) => {
       mesh = gltf.scene
       scene.add(gltf.scene)
 
@@ -375,7 +375,7 @@ function openForms(name) {
   const img = new Image();
   const canvas = document.querySelector('#form-canvas')
   const ctx = canvas.getContext('2d')
-  img.src = '/781a.png'; // Relative or absolute path
+  img.src = '/ref/781a.png'; // Relative or absolute path
 
   let f = forms[name].job
 
@@ -554,3 +554,4 @@ window.setTimeout(function() {
     updateTorqueIn(deg)
   })
 }, 100)
+
