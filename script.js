@@ -1,7 +1,8 @@
 // Get DB
-if ('serviceWorker' in navigator) {
+let register = true
+if ('serviceWorker' in navigator && register) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/ref/service-worker.js')
+    navigator.serviceWorker.register('/sw.js')
       .then(reg => {
         console.log('✅ Service Worker registered with scope:', reg.scope);
       })
@@ -15,13 +16,24 @@ let allPanels
 let forms
 let ref
 let notes
-fetch('/ref/db.json')
+let checklists
+fetch('/db.json')
   .then(res => res.json())
   .then(data => {
     forms = data.forms
     allPanels = data.panels
     ref = data.to
     notes = data.notes
+    checklists = data.checklists
+
+    let ch = document.getElementById('ch')
+    console.log(data)
+    for(let curr of checklists.names) {
+      let button = document.createElement('button')
+      button.setAttribute('onclick', `openChecklist("${curr.obj_name}")`)
+      button.innerHTML = curr.name
+      ch.appendChild(button)
+    }
     loadList()
   });
 
@@ -121,7 +133,7 @@ function startPanelScreen() {
   w.style.display = 'block'
 
   // Create scene, load 3d model, and setup orbit controls
-  if(!scene) {
+  if(scene == undefined) {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xFFFFFF)
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
@@ -149,7 +161,7 @@ function startPanelScreen() {
     //   });
 
     const loader = new THREE.GLTFLoader();
-    loader.load('/ref/f16.glb', (gltf) => {
+    loader.load('/f16.glb', (gltf) => {
       mesh = gltf.scene
       scene.add(gltf.scene)
 
@@ -158,24 +170,18 @@ function startPanelScreen() {
       gltf.scene.children[0].children[0].children[0].children[5].visible = false
       gltf.scene.children[0].children[0].children[0].children[3].visible = false
 
-      //gltf.scene.children[0].children[0].children[0].children[0].children[0].material.metalness = 0
-
       scene.add(group)
       group.name = 'plane'
-      // mesh.traverse(o => {
-      //   if (!o.isMesh) return;
-      //
-      //     o.material.metalness = 0.8,          // full metal
-      //     o.material.roughness = 0.02,         // almost perfect mirror
-      //     o.material.envMap = scene.environment,
-      //     o.material.envMapIntensity = 2.0
-      //   o.material.needsUpdate = true;
-      // });
     }, (xhr) => {
-      s.innerHTML = (xhr.loaded / xhr.total * 100) + '% loaded'
+      let percent = (xhr.loaded / xhr.total * 100)
+      percent = Infinity
+      s.innerHTML = percent + '% loaded'
+      if(s.innerHTML == 'Infinity% loaded') {
+        s.innerHTML = '100% loaded'
+      }
     },
     (error) => {
-      alert(JSON.stringify(error));
+      alert('Error loading 3D model');
     });
 
     // Load past points from localStorage
@@ -308,33 +314,33 @@ function exportJSON() {
   console.log(JSON.stringify(newPanels))
 }
 
-let checklists = {
-  "flyer-ff": ["Tools", "Forms (781 H, A, K, J) Remember required inspection", "Remove covers", "Check tires", "Power On (Check fuel, LOX, and lights)", "Do required inspection (WAI/Preflight)", "Do required servicing"],
-  "flyer-pl": ["Remove nose gear pin and arresting hook pin", "Setup cockpit (survival straps over lap belts)", "Setup comm cord", "Confirm forms are ER'd", "Have forms ready for when pilot arrives", "Launch"],
-  "flyer-pr": ["Setup comm cord", "Do Chip paperwork", "Recover aircraft", "Pin nose and arresting hook", "Have forms ready for pilot", "Hand pilot CDU cover and HUD cover before he gets out", "Safe cockpit", "Replace chip detector", "Write down fuel load, LOX, and Oil", "Required inspection (BPO, TH, QT)", "Refuel", "Forms (781H and J)"],
-  "flyer-th": ["Recovery", "Perform TH inspection", "Refuel", "Fuel, Oil, and LOX loads into 781H"],
-  "flyer-ed": ["Write down Fuel, LOX, and oil", "Confirm seat is safed", "Confirm nose/arresting gear pinned", "Replace Chip detector", "BPO/PR", "Install covers", "Tool accountability"],
-  "job": ["Find job in TO, find follow on MX", "Write up main job and follow on MX jobs", "Accomplish job, <strong>Read TO, Especially for the install.</strong>", "Sign off jobs and follow on MX that was accomplished"],
-  "towing": ["Confirm umbilical cord is not attached on pylons", "Chaff and Flare pinned", "Fuel pylons decarted (Safety wired or backwards)", "Gun Pinned", "EPU Pinned", "LOX bottle removed moving to Fuels", "JFS accumlators at 3000", "Wind >30 Knots: minimize canopy use. Wind >50 Knots: do not open canopy", "Doors 3304 and 3304 closed", ">1000 lbs of weight on nose required"],
-}
-
 function openChecklist(type) {
   let wrapper = document.getElementById('checklists')
   let div = document.getElementById('checklist-items')
+  let name = document.getElementById('cl-name')
   wrapper.style.display = 'block'
 
   let checklist = checklists[type]
 
   div.innerHTML = ""
 
+  let res = checklists.names.find(obj => obj.obj_name === type)
+
+  name.innerHTML = res.name
+
   for(let i in checklist) {
-    let button = document.createElement('button')
+    let button = document.createElement('div')
 
     button.onclick = function() {
-      button.style.backgroundColor = '#00FF00'
+      button.style.background = '#FFFFFF'
     }
-    button.innerHTML = checklist[i]
-    button.style="background-color: red; width: 100%; height 55px; font-size: 30px; margin: 0px"
+    button.innerHTML = `
+    <label class="option">
+      <input type="checkbox" class="cb">
+      <span>${checklist[i]}</span>
+    </label>
+    `
+    button.style="background-color: transparent; width: 100%; height 55px; font-size: 30px; margin: 0px"
 
     div.appendChild(button)
   }
@@ -369,7 +375,7 @@ function openForms(name) {
   const img = new Image();
   const canvas = document.querySelector('#form-canvas')
   const ctx = canvas.getContext('2d')
-  img.src = '/ref/781a.png'; // Relative or absolute path
+  img.src = '/781a.png'; // Relative or absolute path
 
   let f = forms[name].job
 
@@ -548,5 +554,3 @@ window.setTimeout(function() {
     updateTorqueIn(deg)
   })
 }, 100)
-
-
