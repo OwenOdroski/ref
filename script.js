@@ -340,7 +340,7 @@ function openChecklist(type) {
       <span>${checklist[i]}</span>
     </label>
     `
-    button.style="background-color: transparent; width: 100%; height 55px; font-size: 30px; margin: 0px"
+    button.style="background-color: transparent; width: 100%; height 55px; font-size: 20px; margin: 0px"
 
     div.appendChild(button)
   }
@@ -554,4 +554,5 @@ window.setTimeout(function() {
     updateTorqueIn(deg)
   })
 }, 100)
+
 
