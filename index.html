@@ -3,11 +3,11 @@
     <title>Document</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="manifest" href="manifest.json">
-    <script src="/three.js"></script>
-    <script src="/Orbit.js"></script>
-    <script src="/Loader.js"></script>
-    <script src="/script.js"></script>
-    <link rel="stylesheet" href="/style.css">
+    <script src="/ref/three.js"></script>
+    <script src="/ref/Orbit.js"></script>
+    <script src="/ref/Loader.js"></script>
+    <script src="/ref/script.js"></script>
+    <link rel="stylesheet" href="/ref/style.css">
   </head>
   <body>
     <!--
@@ -126,8 +126,8 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'">X<button>
-      <img src="/781H-images-0.jpg" class="h781">
-      <img src="/781H-images-1.jpg" class="h781">
+      <img src="/ref/781H-images-0.jpg" class="h781">
+      <img src="/ref/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
@@ -136,7 +136,7 @@
     <!--Torque Formula-->
     <div class="item">
       <h3>Torque Converter</h3>
-      <p><strong>Warning</strong> this may not be accurate. Units are irrelavent. <a onclick="document.getElementById('torque-calc').style.display='block'" style="cursor: pointer; text-decoration: underline">How is this calculated?</a></p>
+      <p><strong>Warning</strong> this may not be accurate. Units are irrelevant. <a onclick="document.getElementById('torque-calc').style.display='block'" style="cursor: pointer; text-decoration: underline">How is this calculated?</a></p>
       <br>
       <div id="torque-calc">
         <!--How is this calculated?-->
@@ -154,7 +154,7 @@
           E = Length of extension (center of drive to fastener)<br>
           A = Angle of extension (0deg being directly outward)
           <br><br>
-          Units are irrelavent because this formula scales T<sub>applied</sub>
+          Units are irrelevant because this formula scales T<sub>applied</sub>
         </p>
       </div>
       <canvas id="torqueCanvas"></canvas><br>
@@ -176,3 +176,4 @@
     </div>
   </body>
 </html>
+
