@@ -1,87 +1,71 @@
-const version = "v0.2"
-const root = '/ref'
-if (!self.define) {
-    let e, s = {};
-    const i = (i, n) => (i = new URL(i + ".js",n).href,
-    s[i] || new Promise(s => {
-        if ("document"in self) {
-            const e = document.createElement("script");
-            e.src = i,
-            e.onload = s,
-            document.head.appendChild(e)
-        } else
-            e = i,
-            importScripts(i),
-            s()
-    }
-    ).then( () => {
-        let e = s[i];
-        if (!e)
-            throw new Error(`Module ${i} didn’t register its module`);
-        return e
-    }
-    ));
-    self.define = (n, t) => {
-        const r = e || ("document"in self ? document.currentScript.src : "") || location.href;
-        if (s[r])
-            return;
-        let o = {};
-        const l = e => i(e, r)
-          , c = {
-            module: {
-                uri: r
-            },
-            exports: o,
-            require: l
-        };
-        s[r] = Promise.all(n.map(e => c[e] || l(e))).then(e => (t(...e),
-        o))
-    }
-}
-define(["./workbox"], function(e) {
-    "use strict";
-    self.addEventListener("message", e => {
-        e.data && "SKIP_WAITING" === e.data.type && self.skipWaiting()
-    }
-    ),
-    e.precacheAndRoute([{
-        url: root + "/index.html",
-        revision: version
-    }, {
-        url: root + "/Loader.js",
-        revision: version
-    }, {
-        url: root + "/781a.png",
-        revision: version
-    }, {
-        url: root + "/781H-images-0.jpg",
-        revision: version
-    }, {
-        url: root + "/781H-images-1.jpg",
-        revision: version
-    }, {
-        url: root + "/f16.glb",
-        revision: version
-    }, {
-        url: root + "/script.js",
-        revision: version
-    }, {
-        url: root + "/style.css",
-        revision: version
-    }, {
-        url: root + "/three.js",
-        revision: version
-    },{
-        url: root + "/icon.jpg",
-        revision: version
-    }, {
-        url: root + "/Orbit.js",
-        revision: version
-    }, {
-        url: root + "/manifest.json",
-        revision: version
-    }], {}),
-    e.cleanupOutdatedCaches(),
-    e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL(root + "/index.html")))
-});
+const ROOT = "";
 
+// You can make this "1.0.7" or "42" or "2026-03-03-1" — anything.
+// The ONLY requirement is: change it whenever you deploy new assets.
+const APP_VERSION = "1.0.0";
+
+importScripts("https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js");
+
+if (self.workbox) {
+  workbox.setConfig({ debug: false });
+
+  workbox.core.skipWaiting();
+  workbox.core.clientsClaim();
+
+  // Precache your app shell (served even offline)
+  workbox.precaching.precacheAndRoute([
+    { url: `${ROOT}/`,                  revision: APP_VERSION },
+    { url: `${ROOT}/index.html`,        revision: APP_VERSION },
+    { url: `${ROOT}/script.js`,         revision: APP_VERSION },
+    { url: `${ROOT}/style.css`,         revision: APP_VERSION },
+    { url: `${ROOT}/manifest.json`,     revision: APP_VERSION },
+
+    // Libraries / modules you listed in your current SW
+    { url: `${ROOT}/three.js`,          revision: APP_VERSION },
+    { url: `${ROOT}/Orbit.js`,          revision: APP_VERSION },
+    { url: `${ROOT}/Loader.js`,         revision: APP_VERSION },
+
+    // Static assets
+    { url: `${ROOT}/icon.jpg`,          revision: APP_VERSION },
+    { url: `${ROOT}/781a.png`,          revision: APP_VERSION },
+    { url: `${ROOT}/781H-images-0.jpg`, revision: APP_VERSION },
+    { url: `${ROOT}/781H-images-1.jpg`, revision: APP_VERSION },
+    { url: `${ROOT}/f16.glb`,           revision: APP_VERSION },
+
+    // If you want db.json available offline immediately, uncomment this.
+    // (If you prefer it only runtime-cached, leave it out.)
+    // { url: `${ROOT}/db.json`,        revision: APP_VERSION },
+  ]);
+
+  workbox.precaching.cleanupOutdatedCaches();
+
+  // Navigations (refresh / direct URL):
+  // Online: fetch. Offline: serve cached index.html (your “app shell”)
+  workbox.routing.registerRoute(
+    ({ request }) => request.mode === "navigate",
+    async () => {
+      try {
+        return await fetch(`${ROOT}/index.html`, { cache: "no-store" });
+      } catch (e) {
+        return await caches.match(`${ROOT}/index.html`);
+      }
+    }
+  );
+
+  // Everything else (same-origin assets): stale-while-revalidate is a nice balance.
+  // - Serves cached instantly
+  // - If online, updates cache in background so you get updates without manual clearing
+  workbox.routing.registerRoute(
+    ({ url }) => url.origin === self.location.origin && url.pathname.startsWith(`${ROOT}/`),
+    new workbox.strategies.StaleWhileRevalidate({
+      cacheName: "runtime-assets",
+      plugins: [
+        new workbox.cacheableResponse.CacheableResponsePlugin({ statuses: [200] }),
+        new workbox.expiration.ExpirationPlugin({
+          maxEntries: 300,
+          maxAgeSeconds: 90 * 24 * 60 * 60, // 90 days
+        }),
+      ],
+    })
+  );
+}

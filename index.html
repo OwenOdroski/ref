@@ -1,44 +1,44 @@
 <html>
   <head>
+    <script>
+      var consoleOutput = [];
+      var ogLog = console.log;
+      var ogError = console.error;
+      var ogWarn = console.warn;
+
+      console.log = function (...args) {
+          consoleOutput.push([0, args.join(" ")]);
+
+          // Call original console.log
+          ogLog.apply(console, args);
+      };
+      console.error = function(...args) {
+        consoleOutput.push([1, args.join(" ")]);
+
+        // Call original console.log
+        ogError.apply(console, args);
+      }
+      console.warn = function(...args) {
+        consoleOutput.push([2, args.join(" ")]);
+
+        // Call original console.log
+        ogWarn.apply(console, args);
+      }
+    </script>
     <title>Document</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <!--
-    To update page:
-      surge . skinny-dippiing.surge.sh
-
-      Screen Layout:
-
-      Fuel calculator (in element)
-      Quick access TO refrences (in element)
-      Checklists/Reminders
-        Flyer Checklist
-        Reminders, meaning when doing this task dont forget to do this
-      Panel layout/search button
-      Cockpit switch layout/search button
-      List of nonstandard abbreviations
-      00-21-1 data with pre filled out forms button
-
-      Required updates
-        > Fix buttons - wrong sizes COMPLETED
-        > Missing panels on PANEL CHART
-        > Checklists look stupid on mobile COMPLETED
-        > Need more checklists (Doing Mx) COMPLETED
-        > Mesh change color upon search on panel Lookup    COMPLETED
-        > Make the prefilled out forms (removing panels, changing wheels, LOX servicing) COMPLETED (add more)
-
-    -->
-
+    <div id="spacer"></div>
     <!--Usage Warning-->
     <div class="item">
       <h2>WARNING</h2>
@@ -73,7 +73,7 @@
       <input type="text" name="username" placeholder="Username" id="user" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
 
       <p style="margin-left: 16px">Decryption key</p>
-      <input type="password" name="password" placeholder="Key" id="key" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="password" name="password" placeholder="Key" id="key" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
       </form>
       <p style="margin-left: 16px">Encrypted Data File (.enc)</p>
       <input type="file" id="file" accept=".enc">
@@ -91,7 +91,7 @@
       </form>
       <p id="pass-error"></p>
       <button id="file-pass-button">Upload</button>
-      <button onclick="document.getElementById('file-pass').style.display='none';document.getElementById('blur-back').style.display='none'">Proceed without data</button>
+      <button onclick="document.getElementById('file-pass').style.display='none';document.getElementById('blur-back').style.display='none'; ">Quick Access</button>
     </div>
 
     <!-- Oil Consumption limit calc -->
@@ -107,21 +107,21 @@
     </div>
 
     <!--Quick access TO Reference-->
-    <div class="item">
+    <div class="item tohide">
       <h3>TO Lookup</h3>
       <input type="text" id="searchTO" onkeydown="searchTO()" placeholder="Search">
 
       <div id="to-search-res" class="searchBar"></div>
     </div>
 
-    <div class="item">
+    <div class="item tohide">
       <h3>WUC Lookup</h3>
       <input type="text" id="searchWUC" onkeydown="searchWUC()" onkeyup="searchWUC()" placeholder="Search">
 
       <div id="wuc-search-res" class="searchBar"></div>
     </div>
 
-    <div class="item">
+    <div class="item tohide">
       <h3>Reference Designator Search</h3>
       <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="Work Unit Code">
 
@@ -129,7 +129,7 @@
     </div>
 
     <!--Panel Lookup-->
-    <div class="item">
+    <div class="item tohide">
       <h3>Tools</h3>
       <button onclick="startPanelScreen()" style="width: 130px">Panel Lookup</button>
       <button onclick="openIMDS()" style="width: 130px">References</button>
@@ -158,7 +158,7 @@
     </div>
 
     <!--Checklists-->
-    <div class="item" id="ch">
+    <div class="item tohide" id="ch">
       <h3>Checklists</h3>
     </div>
 
@@ -169,7 +169,7 @@
     </div>
 
     <!-- Forms -->
-    <div class="item">
+    <div class="item tohide">
       <h3>Pre-filled out forms</h3>
       <button onclick="openForms('access')">Access Door/Panel open/close</button>
       <button onclick="openForms('lox-serv')">LOX Servicing</button>
@@ -177,9 +177,9 @@
     </div>
 
     <div id="H-content">
-      <button onclick="document.getElementById('H-content').style.display = 'none'">X<button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <button onclick="document.getElementById('H-content').style.display = 'none'">X</button>
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
@@ -209,6 +209,11 @@
 
     <div class="item">
       <button id="clearIndexed">Clear IndexedDB</button>
+      <button onclick="viewConsole()">View Console</button>
+    </div>
+    <div id="console">
+      <button onclick="document.getElementById('console').style.display = 'none'">X</button>
+      <div id="console-content"></div>
     </div>
 
     <div id="legal">
@@ -276,5 +281,3 @@
     </div>
   </body>
 </html>
-
-

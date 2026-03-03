@@ -1,15 +1,35 @@
 // Get DB
-let register = false
-let root = '/ref'
+let root = ''
+let register = true
+
+function isIphonePWA() {
+  const isIOS = /iphone/i.test(navigator.userAgent);
+  const isStandalone =
+    window.navigator.standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches;
+
+  return isIOS && isStandalone;
+}
+
 if ('serviceWorker' in navigator && register) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(root + '/sw.js')
-      .then(reg => {
-        console.log('✅ Service Worker registered with scope:', reg.scope);
-      })
-      .catch(err => {
-        console.error('❌ Service Worker registration failed:', err);
-      });
+    const APP_VERSION = "1.0.0"
+    const reg = navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`, {
+      scope: "./",
+      updateViaCache: "none",
+    })
+
+    const julian = document.getElementById('julian')
+    const date = new Date()
+    const start = new Date(date.getFullYear(), 0, 0);
+    const diff = date - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
+
+    checkJSON()
+    if(isIphonePWA()) {
+      document.getElementById('spacer').style = 'height: 30px'
+    }
   });
 }
 
@@ -25,6 +45,7 @@ let checklists
 let wuc
 let decryptKey
 let refDes
+checkJSON()
 
 function setupDB() {
   return new Promise((resolve, reject) => {
@@ -209,6 +230,10 @@ async function loadPage(db) {
     wuc = data.WUC
     refDes = data.ref
 
+    document.querySelectorAll('.tohide').forEach(el => {
+      el.style.display = 'block';
+    });
+
     let ch = document.getElementById('ch')
 
     for(let curr of checklists.names) {
@@ -242,18 +267,6 @@ let maxLoads = {
   arr: []
 }
 maxLoads.arr = [maxLoads.slick, maxLoads.wing, maxLoads.centerline, maxLoads.wingCenter];
-
-window.onload = function() {
-  // Julian Date
-  const julian = document.getElementById('julian')
-  const date = new Date()
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date - start;
-  const oneDay = 1000 * 60 * 60 * 24;
-  julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
-
-  checkJSON()
-}
 
 function fuelQuan() {
   let total = document.getElementById('fuel-quantity')
@@ -496,6 +509,43 @@ function searchPanel() {
   alert('Could not find Panel')
 }
 
+function viewConsole() {
+  document.getElementById('console').style.display = 'block'
+
+  let wrapper = document.getElementById('console-content')
+  let colors = ['transparent', '#ff8282', '#fcf47c']
+
+  wrapper.innerHTML = ''
+
+  for(let i in consoleOutput) {
+    let div = document.createElement('div')
+    let content = document.createTextNode(consoleOutput[i][1].slice(0, 200))
+
+    div.appendChild(content)
+
+    if(consoleOutput[i][1].slice(0, 200) != consoleOutput[i][1]) {
+      content.textContent += '...'
+      let a = document.createElement('a')
+      a.textContent = '  View More'
+      a.onclick = function() {
+        if(a.textContent === '  View More') {
+          content.textContent = consoleOutput[i][1]
+          a.textContent = '  View Less'
+        } else if(a.textContent === '  View Less') {
+          content.textContent = consoleOutput[i][1].slice(0, 200) + '...'
+          a.textContent = '  View More'
+        }
+
+      }
+
+      div.appendChild(a)
+    }
+
+    div.style = 'color: #000000; padding: 8px; border-radius: 10px; background-color: ' + colors[consoleOutput[i][0]]
+    wrapper.appendChild(div)
+  }
+}
+
 function searchRefDes() {
   let input = document.getElementById('searchRefDes').value
   let output = document.getElementById('res-search-res')
@@ -505,7 +555,7 @@ function searchRefDes() {
   for(let i = 0; i < refDes.length; i++) {
     if(refDes[i].ref.toLowerCase().includes(input) || refDes[i].wuc.toLowerCase().includes(input)) {
       let div = document.createElement('div')
-      let text = document.createTextNode("WUC: " + refDes[i].wuc + " — Ref Des: " + refDes[i].ref)
+      let text = document.createTextNode("WUC: " + refDes[i].wuc + " — Ref Designator: " + refDes[i].ref)
 
       div.appendChild(text)
       div.appendChild(document.createElement('br'))
@@ -529,19 +579,77 @@ function searchWUC() {
     const item = wuc[i];
 
     // Search across all fields
-    if (
-      item.code.toLowerCase().includes(input) ||
-      item.desc.toLowerCase().includes(input) ||
-      item.system.toLowerCase().includes(input)
-    ) {
-      const div = document.createElement("div");
+    if (item.code.toLowerCase().includes(input) || item.desc.toLowerCase().includes(input) || item.system.toLowerCase().includes(input)) {
+      let div = document.createElement("div");
 
-      const strong = document.createElement("strong");
-      strong.textContent = item.code;
+      let strong = document.createElement("strong");
 
-      const text = document.createTextNode(" — " + item.desc);
+      if(item.code.toLowerCase().includes(input) && input.length > 0) {
+        let sp = splitWithChunk(item.code, input)
+
+        for(let i in sp) {
+          if(sp[i] == input) {
+            let ele = document.createElement('span')
+            ele.textContent = sp[i]
+            ele.style = 'background-color: #918a3f; padding: 4px; border-radius: 5px'
+            strong.appendChild(ele)
+          } else {
+            let ele = document.createElement('span')
+            ele.textContent = sp[i]
+            ele.style = 'background-color: transparent; border-radius: 5px'
+            strong.appendChild(ele)
+          }
+        }
+      } else {
+        strong.textContent = item.code
+      }
+
+      const text = document.createElement("span");
+      //" — " + item.desc
+      if(item.desc.toLowerCase().includes(input) && input.length > 0) {
+        let sp = splitWithChunk(item.desc, input)
+
+        for(let i in sp) {
+          if(sp[i] == input) {
+            let ele = document.createElement('span')
+            ele.textContent = sp[i]
+            ele.style = 'background-color: #918a3f; padding: 4px; border-radius: 5px'
+            text.appendChild(ele)
+          } else {
+            let ele = document.createElement('span')
+            ele.textContent = sp[i]
+            ele.style = 'background-color: transparent; border-radius: 5px'
+            text.appendChild(ele)
+          }
+        }
+      } else {
+        text.textContent = item.desc
+      }
+      text.innerHTML = " — " + text.innerHTML.toUpperCase()
+
       const section = document.createElement("em")
-      section.textContent = item.system
+
+      if(item.desc.toLowerCase().includes(input) && input.length > 0) {
+        let sp = splitWithChunk(item.system, input)
+
+        for(let i in sp) {
+          if(sp[i] == input) {
+            let ele = document.createElement('span')
+            ele.textContent = sp[i]
+            ele.style = 'background-color: #918a3f; padding: 4px; border-radius: 5px'
+            section.appendChild(ele)
+          } else {
+            let ele = document.createElement('span')
+            ele.textContent = sp[i]
+            ele.style = 'background-color: transparent; border-radius: 5px'
+            section.appendChild(ele)
+          }
+        }
+      } else {
+        section.textContent = item.desc
+      }
+
+      //section.textContent = item.system
       section.style = "font-size: 12px"
 
       div.appendChild(strong);
@@ -556,6 +664,33 @@ function searchWUC() {
       if (count >= MAX_RESULTS) break;
     }
   }
+}
+
+function splitWithChunk(base, chunk) {
+  let r = []
+  let f = false
+  let s = base.split('')
+  let index = 0
+  for(let i = 0; i < base.length - chunk.length + 1; i++) {
+    let search = ''
+    for(let u = 0; u < chunk.length; u++) {
+      search += base[u + i]
+    }
+    if(chunk === search) {
+      index = i
+      break
+    }
+  }
+  let t1 = base.slice(0, index)
+  let t2 = base.slice(index + chunk.length)
+  let arr = [t1, chunk, t2]
+
+  for(let i in arr) {
+    if(arr[i] != '') {
+      r.push(arr[i])
+    }
+  }
+  return r
 }
 
 var animation
@@ -703,7 +838,7 @@ function openIMDS() {
   let buttons = document.getElementById('imds-buttons')
 
   buttons.textContent = ''
-
+  console.log(notes)
   for(let i in notes) {
     let button = document.createElement('button')
 
@@ -884,5 +1019,3 @@ function base64ToBytes(base64) {
   }
   return bytes;
 }
-
-
