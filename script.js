@@ -1,5 +1,5 @@
 // Get DB
-let root = '/ref'
+let root = '/root'
 let register = true
 
 function isIphonePWA() {
@@ -14,8 +14,8 @@ function isIphonePWA() {
 if ('serviceWorker' in navigator && register) {
   window.addEventListener('load', () => {
     const APP_VERSION = "1.0.0"
-    const reg = navigator.serviceWorker.register(`${root}/sw.js?v=${APP_VERSION}`, {
-      scope: "./${root}",
+    const reg = navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`, {
+      scope: "./",
       updateViaCache: "none",
     })
 
@@ -28,7 +28,12 @@ if ('serviceWorker' in navigator && register) {
 
     checkJSON()
     if(isIphonePWA()) {
-      document.getElementById('spacer').style = 'height: 30px'
+      document.getElementById('spacer').style = 'height: 60px'
+      const items = document.getElementsByClassName("x-button");
+
+      for (let el of items) {
+        el.style = "margin-top: 60px";
+      }
     }
   });
 }
@@ -1019,4 +1024,3 @@ function base64ToBytes(base64) {
   }
   return bytes;
 }
-
