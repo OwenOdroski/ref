@@ -83,7 +83,9 @@ a:hover {
   /* background: rgba(15, 18, 20, 0.72); */
   border-bottom: 1px solid var(--line-2);
 }
-
+.x-button {
+  margin-top: 20px
+}
 /* Card / item look */
 .item {
   background: linear-gradient(180deg, var(--surface), var(--surface-2));
@@ -124,9 +126,6 @@ a:hover {
 }
 #file {
   width: calc(100% - 24px)
-}
-.x-button {
-   margin-top: 20px
 }
 #blur-back {
   position: fixed;
@@ -243,7 +242,7 @@ button:active {
 }
 
 /* Optional: add a green “primary” button style if you want */
-button.primary {
+.primary {
   background: linear-gradient(180deg, var(--accent), var(--accent-2));
   color: #061006;
   border: 1px solid rgba(0,0,0,0.18);
@@ -393,4 +392,3 @@ h5 {
   * { scroll-behavior: auto !important; }
   button:active { transform: none; }
 }
-
