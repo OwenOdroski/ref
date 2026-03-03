@@ -142,7 +142,7 @@
         <p id="loader-status">0% Loaded</p>
       </div>
       <div class="top-bar">
-        <button onclick="closePanelScreen()" style="font-size: 15px">✕</button>
+        <button onclick="closePanelScreen()" style="font-size: 15px" class="x-button">✕</button>
         <input type="number" placeholder="Panel Number" id="searchPanel">
         <button onclick="searchPanel()">Submit</button>
       </div>
@@ -151,7 +151,7 @@
 
     <div id="IMDS">
       <div>
-        <button onclick="document.getElementById('IMDS').style.display = 'none'" style="font-size: 25px">✕</button>
+        <button onclick="document.getElementById('IMDS').style.display = 'none'" style="font-size: 25px" class="x-button">✕</button>
       </div>
       <div id="imds-buttons"></div>
       <div id="imds-results"></div>
@@ -163,7 +163,7 @@
     </div>
 
     <div id="checklists">
-      <button onclick="document.getElementById('checklists').style.display = 'none'">✕</button>
+      <button onclick="document.getElementById('checklists').style.display = 'none'" class="x-button">✕</button>
       <h2 id="cl-name" style="margin-left: 16px"></h2>
       <div id="checklist-items"></div>
     </div>
@@ -177,7 +177,7 @@
     </div>
 
     <div id="H-content">
-      <button onclick="document.getElementById('H-content').style.display = 'none'">X</button>
+      <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
       <img src="/ref/781H-images-0.jpg" class="h781">
       <img src="/ref/781H-images-1.jpg" class="h781">
     </div>
@@ -212,12 +212,12 @@
       <button onclick="viewConsole()">View Console</button>
     </div>
     <div id="console">
-      <button onclick="document.getElementById('console').style.display = 'none'">X</button>
+      <button onclick="document.getElementById('console').style.display = 'none'" class="x-button">✕</button>
       <div id="console-content"></div>
     </div>
 
     <div id="legal">
-      <button onclick="document.getElementById('legal').style.display='none'">✕</button>
+      <button onclick="document.getElementById('legal').style.display='none'" class="x-button">✕</button>
       <h3>Legal disclaimers, sources of information, and security</h3>
       <p>All information in this tool is derived from public sources. The sources are listed below. The information included may be incorrect because it is either from released tech data from F-16A/B variants, outdated TOs approved for public release, or public sources with little to no credibility.</p>
       <p>All data in this tool is stored in a single JSON file. Format is under JavaScript object syntax and is unencrypted.</p>
@@ -281,4 +281,3 @@
     </div>
   </body>
 </html>
-
