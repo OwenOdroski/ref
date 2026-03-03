@@ -1,5 +1,5 @@
 // Get DB
-let root = '/root'
+let root = '/ref'
 let register = true
 
 function isIphonePWA() {
@@ -51,7 +51,6 @@ let checklists
 let wuc
 let decryptKey
 let refDes
-checkJSON()
 
 function setupDB() {
   return new Promise((resolve, reject) => {
@@ -1052,3 +1051,4 @@ function base64ToBytes(base64) {
   }
   return bytes;
 }
+
