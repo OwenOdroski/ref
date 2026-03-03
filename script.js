@@ -27,8 +27,7 @@ if ('serviceWorker' in navigator && register) {
     julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
 
     checkJSON()
-    let check = true
-    if(isIphonePWA() || check) {
+    if(isIphonePWA()) {
       document.getElementById('spacer').style = 'height: 60px'
       const items = document.getElementsByClassName("x-button");
 
@@ -1051,4 +1050,5 @@ function base64ToBytes(base64) {
   }
   return bytes;
 }
+
 
