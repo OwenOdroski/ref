@@ -27,12 +27,13 @@ if ('serviceWorker' in navigator && register) {
     julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
 
     checkJSON()
-    if(isIphonePWA()) {
+    let check = true
+    if(isIphonePWA() || check) {
       document.getElementById('spacer').style = 'height: 60px'
       const items = document.getElementsByClassName("x-button");
 
       for (let el of items) {
-        el.style = "margin-top: 60px";
+        el.style = "margin-top: 50px";
       }
     }
   });
@@ -766,6 +767,33 @@ window.addEventListener('beforeinstallprompt', (e) => {
   };
   document.body.appendChild(btn);
 });
+
+async function clearAppStorage({ reload = true } = {}) {
+  // Delete all Cache Storage entries
+  if ("caches" in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+  }
+
+  // Delete all IndexedDB databases
+  if ("indexedDB" in window && indexedDB.databases) {
+    const dbs = await indexedDB.databases();
+    await Promise.all(
+      dbs.map(db => {
+        return new Promise(resolve => {
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = req.onerror = req.onblocked = () => resolve();
+        });
+      })
+    );
+  }
+
+  console.log("Caches and IndexedDB cleared.");
+
+  if (reload) {
+    location.reload();
+  }
+}
 
 function openForms(name) {
   let div = document.getElementById('forms')
