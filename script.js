@@ -1,5 +1,5 @@
 // Get DB
-let root = ''
+let root = '/ref'
 let register = true
 
 function isIphonePWA() {
@@ -14,8 +14,8 @@ function isIphonePWA() {
 if ('serviceWorker' in navigator && register) {
   window.addEventListener('load', () => {
     const APP_VERSION = "1.0.0"
-    const reg = navigator.serviceWorker.register(`./sw.js?v=${APP_VERSION}`, {
-      scope: "./",
+    const reg = navigator.serviceWorker.register(`${root}/sw.js?v=${APP_VERSION}`, {
+      scope: "./${root}",
       updateViaCache: "none",
     })
 
@@ -1019,3 +1019,4 @@ function base64ToBytes(base64) {
   }
   return bytes;
 }
+
