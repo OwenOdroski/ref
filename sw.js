@@ -1,4 +1,4 @@
-const ROOT = "";
+const ROOT = "/ref";
 
 // You can make this "1.0.7" or "42" or "2026-03-03-1" — anything.
 // The ONLY requirement is: change it whenever you deploy new assets.
@@ -69,3 +69,4 @@ if (self.workbox) {
     })
   );
 }
+
