@@ -1,5 +1,5 @@
 // Get DB
-let root = ''
+let root = '/ref'
 let register = false
 
 function isIphonePWA() {
