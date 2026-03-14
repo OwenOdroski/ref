@@ -30,12 +30,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <div id="spacer"></div>
@@ -141,12 +141,22 @@
       <div id="loader-wrapper">
         <p id="loader-status">0% Loaded</p>
       </div>
-      <div class="top-bar">
+      <div class="top-bar" id="searchBarPanels">
         <button onclick="closePanelScreen()" style="font-size: 15px" class="x-button">✕</button>
         <input type="number" placeholder="Panel Number" id="searchPanel">
         <button onclick="searchPanel()">Submit</button>
       </div>
       <canvas id="panel-canvas"></canvas>
+      <div style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0)">
+        <button id="switch">Switch to Forward Cockpit</button>
+      </div>
+    </div>
+
+    <div id="cockpit-desc">
+      <button onclick="document.getElementById('cockpit-desc').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
+      <h2 id="cpName"></h2>
+      <span id="ident"></span>
+      <p id="cpDesc"></p>
     </div>
 
     <div id="IMDS">
@@ -178,8 +188,8 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
@@ -255,6 +265,12 @@
 
       <h4>Reference Designator Search</h4>
       <p>Reference designators are sourced from the same file as WUC search (-06 manual)</p>
+
+      <h4>Cockpit Layout</h4>
+      <p>The cockpit file was created by "Muhamad Mirza Arrafi" on Sketchfab.com. The file was edited to only show the cockpit. The model is a block 60 F-16, so the panel locations may be inaccurate.</p>
+      <p>The data referenced within the cockpit is sourced from a publicized flight manual dating back to 18 April, 2024 using the block 50/52 F-16C/D</p>
+      <a href="https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3">SOURCE HERE</a>
+      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-1%20BMS.pdf"></a>
 
       <h4>Checklists</h4>
       <p>This is not a replacement for TO's. Checklists are organizational aids and do not replace official inspection procedures. This is used to help confirm that each step was accomplished. No tech data is included in these checklists</p>

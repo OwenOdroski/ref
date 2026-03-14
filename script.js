@@ -1,6 +1,6 @@
 // Get DB
-let root = '/ref'
-let register = true
+let root = ''
+let register = false
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -27,7 +27,8 @@ if ('serviceWorker' in navigator && register) {
     julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
 
     checkJSON()
-    if(isIphonePWA()) {
+    let check = true
+    if(isIphonePWA() || check) {
       document.getElementById('spacer').style = 'height: 60px'
       const items = document.getElementsByClassName("x-button");
 
@@ -43,6 +44,7 @@ const STORE_NAME = "jsonStore";
 const DB_VERSION = 1;
 
 let allPanels
+let cockPanels
 let forms
 let ref
 let notes
@@ -50,6 +52,8 @@ let checklists
 let wuc
 let decryptKey
 let refDes
+let devCockpit = []
+let panelDesc
 
 function setupDB() {
   return new Promise((resolve, reject) => {
@@ -219,6 +223,7 @@ async function checkJSON() {
 
   }
 }
+checkJSON()
 
 async function loadPage(db) {
   let d = await getJSON(db, 'json')
@@ -233,6 +238,8 @@ async function loadPage(db) {
     checklists = data.checklists
     wuc = data.WUC
     refDes = data.ref
+    cockPanels = data.cpPanels
+    panelDesc = data.panelData
 
     document.querySelectorAll('.tohide').forEach(el => {
       el.style.display = 'block';
@@ -322,7 +329,7 @@ function searchTO() {
   });
 }
 
-var scene, camera, renderer, controls, mesh, group, light
+var scene, camera, renderer, controls, mesh, group, light, group2
 
 // Panel Lookup
 let panels = allPanels
@@ -341,6 +348,7 @@ function startPanelScreen() {
   let c2 = document.getElementById('panel-canvas')
   let w = document.getElementById('loader-wrapper')
   let s = document.getElementById('loader-status')
+  let mode3 = 0
   c2.style.display = 'block'
   canvas.style.display = 'block'
   w.style.display = 'block'
@@ -356,12 +364,89 @@ function startPanelScreen() {
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-    light = new THREE.AmbientLight(0xffffff, 1.2);
+    light = new THREE.AmbientLight(0xffffff, 2.2);
     scene.add(light);
 
     group = new THREE.Group()
+    group2 = new THREE.Group()
 
     const loader = new THREE.GLTFLoader();
+
+    loader.load(root + '/cockpit.glb', (gltf) => {
+      gltf.scene.position.set(0, -20, 200)
+      gltf.scene.scale.set(8, 8, 8)
+      gltf.scene.rotation.x = Math.PI / -2
+      gltf.scene.rotation.z = Math.PI / -2
+      gltf.scene.children[0].children[9].visible = false
+      gltf.scene.visible = false
+      group2.visible = false
+      scene.add(gltf.scene)
+
+      let button = document.getElementById('switch')
+      let bar = document.getElementById('searchBarPanels')
+
+      // Force double sided
+      gltf.scene.traverse((obj) => {
+        if (obj.isMesh && obj.material) {
+          obj.material.side = THREE.DoubleSide;
+        }
+      });
+
+      button.onclick = () => {
+        if(mode3 == 0) {
+          let pos = new THREE.Vector3(0 + 29, 0.5, 200)
+          camera.position.copy(pos)
+          camera.position.x -= 0.1
+          controls.target.copy(pos)
+          controls.enableZoom = false
+          controls.rotateSpeed = 1
+          bar.style.display = 'none'
+          mode3 = 1
+          button.textContent = 'Switch to Aft Cockpit'
+          mesh.visible = false
+          gltf.scene.visible = true
+          group.visible = false
+          group2.visible = true
+        } else if(mode3 == 1) {
+          let pos = new THREE.Vector3(0 + 15, 0.8, 200)
+          camera.position.copy(pos)
+          camera.position.x -= 0.1
+          controls.target.copy(pos)
+          controls.enableZoom = false
+          controls.rotateSpeed = 1
+          bar.style.display = 'none'
+          mode3 = 2
+          button.textContent = 'Switch to Panel Chart'
+          mesh.visible = false
+          gltf.scene.visible = true
+          group.visible = false
+          group2.visible = true
+        } else {
+          camera.position.set(100, 60, 100)
+          controls.target.set(0, 0, 0)
+          controls.enableZoom = true
+          controls.rotateSpeed = 1
+          bar.style.display = 'block'
+          mode3 = 0
+          button.textContent = 'Switch to Forward Cockpit'
+          mesh.visible = true
+          gltf.scene.visible = false
+          group.visible = true
+          group2.visible = false
+        }
+      }
+    }, (xhr) => {
+      let percent = (xhr.loaded / xhr.total * 100)
+      s.textContent = percent + '% loaded'
+      if(s.textContent == 'Infinity% loaded') {
+        s.textContent = '100% loaded'
+      }
+    },
+    (error) => {
+      alert('Error loading 3D model');
+    })
+
+
     loader.load(root + '/f16.glb', (gltf) => {
       mesh = gltf.scene
       scene.add(gltf.scene)
@@ -371,11 +456,17 @@ function startPanelScreen() {
       gltf.scene.children[0].children[0].children[0].children[5].visible = false
       gltf.scene.children[0].children[0].children[0].children[3].visible = false
 
+      gltf.scene.traverse((child) => {
+        if(child.type == 'Mesh') {
+          child.material.metalness = 3
+          child.material.side = THREE.DoubleSide;
+        }
+      })
+
       scene.add(group)
       group.name = 'plane'
     }, (xhr) => {
       let percent = (xhr.loaded / xhr.total * 100)
-      percent = Infinity
       s.textContent = percent + '% loaded'
       if(s.textContent == 'Infinity% loaded') {
         s.textContent = '100% loaded'
@@ -399,6 +490,18 @@ function startPanelScreen() {
       mesh.position.z = value[i].cords[2]
       group.add(mesh)
     }
+    for(let i in cockPanels) {
+      let mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 15, 15),
+        new THREE.MeshBasicMaterial({color: 0xFF0000})
+      )
+      mesh.name = i
+      mesh.position.x = cockPanels[i].cords[0]
+      mesh.position.y = cockPanels[i].cords[1]
+      mesh.position.z = cockPanels[i].cords[2]
+      group2.add(mesh)
+    }
+    scene.add(group2)
 
     camera.position.set(100, 60, 100);
 
@@ -412,46 +515,89 @@ function startPanelScreen() {
       pointer.y = -(event.clientY / canvas3.clientHeight) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
+      //mode = 'dev'
 
       // Replace `targetMesh` with the mesh you want to test against
       if(mode == 'dev') {
         const intersects = raycaster.intersectObject(scene, true);
 
         if (intersects.length > 0) {
-          if(intersects[0].object.name[0] == 'O') {
-            let point = intersects[0].point;
+          if(mode3 == 0) {
+            if(intersects[0].object.name[0] == 'O') {
+              let point = intersects[0].point;
 
-            let hit = intersects[0];
-            let vec = hit.point
+              let hit = intersects[0];
+              let vec = hit.point
 
-            let mesh = new THREE.Mesh(
-              new THREE.SphereGeometry(1, 15, 15),
-              new THREE.MeshBasicMaterial({color: 0xFF0000})
-            )
-            mesh.position.x = vec.x
-            mesh.position.y = vec.y
-            mesh.position.z = vec.z
-            scene.add(mesh)
+              let mesh = new THREE.Mesh(
+                new THREE.SphereGeometry(1, 15, 15),
+                new THREE.MeshBasicMaterial({color: 0xFF0000})
+              )
+              mesh.position.x = vec.x
+              mesh.position.y = vec.y
+              mesh.position.z = vec.z
+              scene.add(mesh)
 
-            let panelNumber = prompt("Panel Number")
-            let name = prompt("Panel Name")
-            let type = prompt("Panel or Door")
+              let panelNumber = prompt("Panel Number")
+              let name = prompt("Panel Name")
+              let type = prompt("Panel or Door")
 
-            if(panelNumber == undefined || panelNumber == "") {
-              return
+              if(panelNumber == undefined || panelNumber == "") {
+                return
+              }
+
+              newPanels.push({cords: [vec.x, vec.y, vec.z], name: name, number: panelNumber, type: type})
+            } else {
+              alert(allPanels[JSON.parse(intersects[0].object.name)].number + '\n' + JSON.parse(intersects[0].object.name))
             }
+          } else if(mode3 == 1 || mode3 == 2) {
+            let pr = prompt("Name? ")
 
-            newPanels.push({cords: [vec.x, vec.y, vec.z], name: name, number: panelNumber, type: type})
-          } else {
-            alert(allPanels[JSON.parse(intersects[0].object.name)].number + '\n' + JSON.parse(intersects[0].object.name))
+            if(pr != null || pr.length != 0 || pr != undefined) {
+              // Add that ball
+              let point = intersects[0].point;
+
+              let hit = intersects[0];
+              let vec = hit.point
+
+              let mesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1, 15, 15),
+                new THREE.MeshBasicMaterial({color: 0xFF0000})
+              )
+              mesh.position.x = vec.x
+              mesh.position.y = vec.y
+              mesh.position.z = vec.z
+              scene.add(mesh)
+
+              devCockpit.push({cords: [vec.x, vec.y, vec.z], title: pr, data: []})
+            }
           }
         }
       } else if(mode == 'view') {
-        const intersects = raycaster.intersectObject(group, true);
+        if(mode3 == 0) {
+          let intersects = raycaster.intersectObject(group, true);
+          if(intersects.length > 0) {
+            let panel = allPanels[intersects[0].object.name]
+            alert(panel.type + ' Number: ' + panel.number)
+          }
+        } else {
+          let intersects = raycaster.intersectObject(group2, true);
+          if(intersects.length > 0) {
+            let format = (val) => { return Math.floor(val * 100) }
+            let panel = cockPanels[intersects[0].object.name]
+            let wrapper = document.getElementById('cockpit-desc')
+            let ident = format(panel.cords[0]) + '/' + format(panel.cords[1]) + '/' + format(panel.cords[2])
 
-        if(intersects.length > 0) {
-          let panel = allPanels[intersects[0].object.name]
-          alert(panel.type + ' Number: ' + panel.number)
+            wrapper.style.display = 'block'
+            document.getElementById('cpName').style = 'color: black'
+            document.getElementById('cpName').textContent = panel.title.toUpperCase()
+
+            document.getElementById('ident').style = 'color: black; font-size: 13px; margin-top: -16px'
+            document.getElementById('ident').textContent = ident
+
+            document.getElementById('cpDesc').style = 'color: black; font-size: 16px'
+            document.getElementById('cpDesc').textContent = panelDesc[ident]
+          }
         }
       }
     });
@@ -706,6 +852,7 @@ function animate() {
 
 function exportJSON() {
   console.log(JSON.stringify(newPanels))
+  console.log(JSON.stringify(devCockpit))
 }
 
 function openChecklist(type) {
@@ -1050,5 +1197,3 @@ function base64ToBytes(base64) {
   }
   return bytes;
 }
-
-

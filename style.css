@@ -70,6 +70,19 @@ a:hover {
   text-decoration: underline;
 }
 
+#cockpit-desc {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  width: calc(100% - 60px);
+  height: calc(100% - 60px);
+  background-color: white;
+  z-index: 99999999;
+  display: none;
+  padding: 16px;
+  white-space: pre-line;
+}
+
 /* Top bar gets a subtle glass + divider so it feels “real” */
 .top-bar {
   position: fixed;
