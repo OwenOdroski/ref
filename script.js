@@ -148,7 +148,7 @@ async function checkJSON() {
 
   if(!c) {
     document.getElementById('file-upload').style.opacity = '1'
-    document.getElementById('file-pass').style.zIndex = '-1'
+    document.getElementById('file-pass').pointerEvents = "none"
     document.getElementById('blur-back').style.display = 'block'
 
     let upload = document.getElementById('file')
@@ -187,7 +187,6 @@ async function checkJSON() {
 
           await saveJSON(a, "json", text);
           document.getElementById('file-upload').style.opacity = '0'
-          document.getElementById('file-upload').style.zIndex = '-1'
           document.getElementById('blur-back').style.display = 'none'
           loadPage(a)
         }
@@ -197,7 +196,7 @@ async function checkJSON() {
     });
   } else {
     document.getElementById('file-pass').style.opacity = '1'
-    document.getElementById('file-upload').style.zIndex = '-1'
+    document.getElementById('file-upload').pointerEvents = "none"
     document.getElementById('blur-back').style.display = 'block'
 
     async function l(reason = '', user, key) {
@@ -221,7 +220,6 @@ async function checkJSON() {
           return
         }
         document.getElementById('file-pass').style.opacity = '0'
-        document.getElementById('file-pass').style.zIndex = '-1'
         document.getElementById('blur-back').style.display = 'none'
         window.location.hash = "#loggedin"
         loadPage(a)
