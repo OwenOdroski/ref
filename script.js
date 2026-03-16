@@ -148,7 +148,7 @@ async function checkJSON() {
 
   if(!c) {
     document.getElementById('file-upload').style.opacity = '1'
-    document.getElementById('file-pass').pointerEvents = "none"
+    document.getElementById('file-pass').style.pointerEvents = "none"
     document.getElementById('blur-back').style.display = 'block'
 
     let upload = document.getElementById('file')
@@ -196,7 +196,7 @@ async function checkJSON() {
     });
   } else {
     document.getElementById('file-pass').style.opacity = '1'
-    document.getElementById('file-upload').pointerEvents = "none"
+    document.getElementById('file-upload').style.pointerEvents = "none"
     document.getElementById('blur-back').style.display = 'block'
 
     async function l(reason = '', user, key) {
