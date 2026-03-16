@@ -154,11 +154,7 @@ async function checkJSON() {
     let upload = document.getElementById('file')
     let form = document.getElementById('signup')
 
-    signupBox.style.opacity = '1';
-    signupBox.style.pointerEvents = 'auto';
-
-    loginBox.style.opacity = '0';
-    loginBox.style.pointerEvents = 'none';
+    loginBox.style.display = 'none'
 
     form.addEventListener("submit", async (e) => {
       const file = upload.files[0];
@@ -207,11 +203,7 @@ async function checkJSON() {
     const signupBox = document.getElementById('file-upload');
     const loginBox = document.getElementById('file-pass');
 
-    loginBox.style.opacity = '1';
-    loginBox.style.pointerEvents = 'auto';
-
-    signupBox.style.opacity = '0';
-    signupBox.style.pointerEvents = 'none';
+    signupBox.style.display = 'none';
 
     async function l(reason = '', user, key) {
       let cn = await getJSON(a, 'json')
