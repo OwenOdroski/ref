@@ -1,5 +1,5 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
 
 function isIphonePWA() {
@@ -46,9 +46,9 @@ window.addEventListener("load", () => {
   let start = new Date(date.getFullYear(), 0, 0);
   let diff = date - start;
   let oneDay = 1000 * 60 * 60 * 24;
+  let check = true
   julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
 
-  let check = true
   if(isIphonePWA() || check) {
     document.getElementById('spacer').style = 'height: 60px'
     const items = document.getElementsByClassName("x-button");
@@ -151,45 +151,40 @@ async function checkJSON() {
     document.getElementById('blur-back').style.display = 'block'
 
     let upload = document.getElementById('file')
-    let button = document.getElementById('signup')
+    let form = document.getElementById('signup')
 
-    button.addEventListener("submit", async (e) => {
-      e.preventDefault()
+    form.addEventListener("submit", async (e) => {
       const file = upload.files[0];
+      const key = form.password.value
+      const user = form.username.value
+      e.preventDefault()
+      const text = await file.text();   // Read file as string
+      const dec = await decryptAES(text, user + key)
+
       if (!file) return;
+      decryptKey = user.value + key.value
 
-      try {
-        const key = document.getElementById('key')
-        const user = document.getElementById('user')
-        const text = await file.text();   // Read file as string
-        const dec = await decryptAES(text, user.value + key.value)
-
-        decryptKey = user.value + key.value
-
-        if (!dec.ok) {
-          if (dec.reason === "decrypt_failed") {
-            alert("Wrong password OR file corrupted/tampered.");
-          } else {
-            alert("Bad file format.");
-          }
+      if (!dec.ok) {
+        if (dec.reason === "decrypt_failed") {
+          alert("Wrong password OR file corrupted/tampered.");
         } else {
-          let json = dec.value
-
-          let d = new Date(dec.value.meta.els)
-          let td = new Date()
-
-          if(d < td) {
-            alert("Encrypted file has expired")
-            return
-          }
-
-          await saveJSON(a, "json", text);
-          document.getElementById('file-upload').style.display = 'none'
-          document.getElementById('blur-back').style.display = 'none'
-          loadPage(a)
+          alert("Bad file format.");
         }
-      } catch (err) {
-        console.error("Invalid JSON file:", err);
+      } else {
+        let json = dec.value
+
+        let d = new Date(dec.value.meta.els)
+        let td = new Date()
+
+        if(d < td) {
+          alert("Encrypted file has expired")
+          return
+        }
+
+        await saveJSON(a, "json", text);
+        document.getElementById('file-upload').style.display = 'none'
+        document.getElementById('blur-back').style.display = 'none'
+        loadPage(a)
       }
 
     });
@@ -197,12 +192,12 @@ async function checkJSON() {
     document.getElementById('file-pass').style.display = 'block'
     document.getElementById('blur-back').style.display = 'block'
 
-    async function l(reason = '') {
-      let key = document.getElementById('key-preload')
-      let user = document.getElementById('user-preload')
+    async function l(reason = '', user, key) {
       let cn = await getJSON(a, 'json')
-      decryptKey = user.value + key.value
+      decryptKey = user + key
+      console.log(user, key)
       let content = await decryptAES(cn, decryptKey)
+      let doc = document.getElementById('pass-error')
 
       if(!content.ok) {
         doc.innerHTML = "Error decrypting file"
@@ -210,7 +205,6 @@ async function checkJSON() {
       } else {
         let d = new Date(content.value.meta.els)
         let td = new Date()
-        let doc = document.getElementById('pass-error')
 
         if(d < td) {
           doc.innerHTML = "Encrypted file has expired"
@@ -223,9 +217,13 @@ async function checkJSON() {
         loadPage(a)
       }
     }
-    document.getElementById('login').addEventListener("submit", (e) => {
+    let login = document.getElementById('login')
+    login.addEventListener("submit", (e) => {
+      let user = login.username.value
+      let key = login.password.value
+      console.log(user, key)
       e.preventDefault()
-      l()
+      l('', user, key)
     })
 
   }
