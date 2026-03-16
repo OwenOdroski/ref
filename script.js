@@ -1,5 +1,5 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
 
 function isIphonePWA() {
@@ -18,13 +18,6 @@ if ('serviceWorker' in navigator && register) {
       scope: "./",
       updateViaCache: "none",
     })
-
-    const julian = document.getElementById('julian')
-    const date = new Date()
-    const start = new Date(date.getFullYear(), 0, 0);
-    const diff = date - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
 
     checkJSON()
     let check = true
@@ -54,6 +47,16 @@ let decryptKey
 let refDes
 let devCockpit = []
 let panelDesc
+let allowContolsUpdate = true
+
+window.addEventListener("load", () => {
+  let julian = document.getElementById('julian')
+  let date = new Date()
+  let start = new Date(date.getFullYear(), 0, 0);
+  let diff = date - start;
+  let oneDay = 1000 * 60 * 60 * 24;
+  julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
+})
 
 function setupDB() {
   return new Promise((resolve, reject) => {
@@ -147,9 +150,10 @@ async function checkJSON() {
     document.getElementById('blur-back').style.display = 'block'
 
     let upload = document.getElementById('file')
-    let button = document.getElementById('upload-enc')
+    let button = document.getElementById('signup')
 
-    button.addEventListener("mousedown", async (e) => {
+    button.addEventListener("submit", async (e) => {
+      e.preventDefault()
       const file = upload.files[0];
       if (!file) return;
 
@@ -191,6 +195,7 @@ async function checkJSON() {
   } else {
     document.getElementById('file-pass').style.display = 'block'
     document.getElementById('blur-back').style.display = 'block'
+
     async function l(reason = '') {
       let key = document.getElementById('key-preload')
       let user = document.getElementById('user-preload')
@@ -217,9 +222,10 @@ async function checkJSON() {
         loadPage(a)
       }
     }
-    document.getElementById('file-pass-button').onclick = () => {
+    document.getElementById('login').addEventListener("submit", (e) => {
+      e.preventDefault()
       l()
-    }
+    })
 
   }
 }
@@ -383,7 +389,7 @@ function startPanelScreen() {
       scene.add(gltf.scene)
 
       let button = document.getElementById('switch')
-      let bar = document.getElementById('searchBarPanels')
+      let bar = document.getElementById('clearWrapper')
 
       // Force double sided
       gltf.scene.traverse((obj) => {
@@ -569,7 +575,7 @@ function startPanelScreen() {
               mesh.position.z = vec.z
               scene.add(mesh)
 
-              devCockpit.push({cords: [vec.x, vec.y, vec.z], title: pr, data: []})
+              devCockpit.push({cords: [vec.x, vec.y, vec.z], title: pr})
             }
           }
         }
@@ -582,21 +588,50 @@ function startPanelScreen() {
           }
         } else {
           let intersects = raycaster.intersectObject(group2, true);
+
           if(intersects.length > 0) {
             let format = (val) => { return Math.floor(val * 100) }
             let panel = cockPanels[intersects[0].object.name]
-            let wrapper = document.getElementById('cockpit-desc')
-            let ident = format(panel.cords[0]) + '/' + format(panel.cords[1]) + '/' + format(panel.cords[2])
+            document.getElementById('desccp').textContent = ''
+            if(panel != undefined) {
+              let wrapper = document.getElementById('cockpit-desc')
+              let ident = format(panel.cords[0]) + '/' + format(panel.cords[1]) + '/' + format(panel.cords[2])
 
-            wrapper.style.display = 'block'
-            document.getElementById('cpName').style = 'color: black'
-            document.getElementById('cpName').textContent = panel.title.toUpperCase()
+              wrapper.style.display = 'block'
+              document.getElementById('cpName').style = 'color: black'
+              document.getElementById('cpName').textContent = panel.title.toUpperCase()
 
-            document.getElementById('ident').style = 'color: black; font-size: 13px; margin-top: -16px'
-            document.getElementById('ident').textContent = ident
+              document.getElementById('ident').style = 'color: black; font-size: 13px; margin-top: -16px'
+              document.getElementById('ident').textContent = ident
 
-            document.getElementById('cpDesc').style = 'color: black; font-size: 16px'
-            document.getElementById('cpDesc').textContent = panelDesc[ident]
+              let desc = document.getElementById('cpDesc')
+              desc.innerHTML = ''
+
+              for(let i in panelDesc[ident]) {
+                let curr = panelDesc[ident][i]
+
+                if(curr.type == 'tab') {
+                  let d = document.createElement('details')
+                  let s = document.createElement('summary')
+                  let p = document.createElement('p')
+
+                  s.textContent = curr.name.toUpperCase()
+                  p.textContent = curr.data.replace(/\n/g, "\n\n")
+
+                  s.style = 'color: black; font-size: 25px'
+                  p.style = "color: black"
+
+                  d.appendChild(s)
+                  d.appendChild(p)
+                  desc.appendChild(d)
+                } else {
+                  let d = document.getElementById('desccp')
+
+                  d.style = 'color: black'
+                  d.textContent = curr.data
+                }
+              }
+            }
           }
         }
       }
@@ -846,7 +881,7 @@ function splitWithChunk(base, chunk) {
 var animation
 function animate() {
   animation = requestAnimationFrame(animate);
-  controls.update();
+  if(allowContolsUpdate) controls.update();
   renderer.render(scene, camera);
 }
 

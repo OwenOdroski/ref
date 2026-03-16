@@ -30,19 +30,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
+    <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}] -->
     <div id="spacer"></div>
     <!--Usage Warning-->
     <div class="item">
       <h2>WARNING</h2>
-      <p>This is a reference only and should not be used in place of TOs. Read <a onclick="openLegal()" style="text-decoration: underline">this</a> before use.</p>
+      <p>This is reference only and should not be used in place of TOs. Read <a onclick="openLegal()" style="text-decoration: underline">this</a> before use.</p>
     </div>
     <div id="blur-back"></div>
     <!--Fuel Load Calc-->
@@ -68,29 +69,32 @@
     <!-- Upload document -->
     <div class="item" id="file-upload">
       <h2 style="margin-left: 16px; margin-top: 12px">Welcome!</h2>
-      <form>
-      <p style="margin-left: 16px">Username</p>
-      <input type="text" name="username" placeholder="Username" id="user" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <form id="signup">
+        <p style="margin-left: 16px">Username</p>
+        <input type="text" name="username" placeholder="Username" id="user" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
 
-      <p style="margin-left: 16px">Decryption key</p>
-      <input type="password" name="password" placeholder="Key" id="key" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <p style="margin-left: 16px">Password</p>
+        <input type="password" name="password" placeholder="Key" id="key" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+        <p style="margin-left: 16px">Encrypted Data File (.enc)</p>
+        <input type="file" id="file" accept=".enc">
+
+        <button type="submit" id="upload-enc">Submit</button>
       </form>
-      <p style="margin-left: 16px">Encrypted Data File (.enc)</p>
-      <input type="file" id="file" accept=".enc">
-      <button id="upload-enc">Upload</button>
       <p style="margin-left: 16px; font-size: 12px">File is saved locally and not distributed</p>
     </div>
 
     <!--Confirm password-->
     <div class="item" id="file-pass">
-      <form>
+      <form id="login">
         <p style="margin-left: 16px">Username</p>
         <input type="text" name="username" placeholder="Username" id="user-preload" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
-        <p style="margin-left: 16px">Decryption key</p>
+        <p style="margin-left: 16px">Password</p>
         <input type="password" name="password" placeholder="Key" id="key-preload" autocomplete="current-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <p id="pass-error"></p>
+        <button type="submit" id="file-pass-button">Submit</button>
       </form>
-      <p id="pass-error"></p>
-      <button id="file-pass-button">Upload</button>
+
       <button onclick="document.getElementById('file-pass').style.display='none';document.getElementById('blur-back').style.display='none'; ">Quick Access</button>
     </div>
 
@@ -104,28 +108,6 @@
 
     <div class="item">
       <h3 id="julian"></h3>
-    </div>
-
-    <!--Quick access TO Reference-->
-    <div class="item tohide">
-      <h3>TO Lookup</h3>
-      <input type="text" id="searchTO" onkeydown="searchTO()" placeholder="Search">
-
-      <div id="to-search-res" class="searchBar"></div>
-    </div>
-
-    <div class="item tohide">
-      <h3>WUC Lookup</h3>
-      <input type="text" id="searchWUC" onkeydown="searchWUC()" onkeyup="searchWUC()" placeholder="Search">
-
-      <div id="wuc-search-res" class="searchBar"></div>
-    </div>
-
-    <div class="item tohide">
-      <h3>Reference Designator Search</h3>
-      <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="Work Unit Code">
-
-      <div id="res-search-res" class="searchBar"></div>
     </div>
 
     <!--Panel Lookup-->
@@ -142,9 +124,11 @@
         <p id="loader-status">0% Loaded</p>
       </div>
       <div class="top-bar" id="searchBarPanels">
-        <button onclick="closePanelScreen()" style="font-size: 15px" class="x-button">✕</button>
-        <input type="number" placeholder="Panel Number" id="searchPanel">
-        <button onclick="searchPanel()">Submit</button>
+        <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
+        <div id="clearWrapper" style="display: inline">
+          <input type="number" placeholder="Panel Number" id="searchPanel">
+          <button onclick="searchPanel()" id="panel-search-submit">Submit</button>
+        </div>
       </div>
       <canvas id="panel-canvas"></canvas>
       <div style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0)">
@@ -156,7 +140,8 @@
       <button onclick="document.getElementById('cockpit-desc').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
       <h2 id="cpName"></h2>
       <span id="ident"></span>
-      <p id="cpDesc"></p>
+      <p id="desccp"></p>
+      <div id="cpDesc"></div>
     </div>
 
     <div id="IMDS">
@@ -188,11 +173,35 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
+    </div>
+
+    <!--Quick access TO Reference-->
+    <div class="item tohide">
+      <h3>TO Lookup</h3>
+      <input type="text" id="searchTO" onkeydown="searchTO()" placeholder="Search">
+
+      <div id="to-search-res" class="searchBar"></div>
+    </div>
+
+    <!--WUC Search-->
+    <div class="item tohide">
+      <h3>WUC Lookup</h3>
+      <input type="text" id="searchWUC" onkeydown="searchWUC()" onkeyup="searchWUC()" placeholder="Search">
+
+      <div id="wuc-search-res" class="searchBar"></div>
+    </div>
+
+    <!--Reference Designator-->
+    <div class="item tohide">
+      <h3>Reference Designator Search</h3>
+      <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="Work Unit Code">
+
+      <div id="res-search-res" class="searchBar"></div>
     </div>
 
     <!--Torque Formula-->
@@ -269,8 +278,9 @@
       <h4>Cockpit Layout</h4>
       <p>The cockpit file was created by "Muhamad Mirza Arrafi" on Sketchfab.com. The file was edited to only show the cockpit. The model is a block 60 F-16, so the panel locations may be inaccurate.</p>
       <p>The data referenced within the cockpit is sourced from a publicized flight manual dating back to 18 April, 2024 using the block 50/52 F-16C/D</p>
-      <a href="https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3">SOURCE HERE</a>
-      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-1%20BMS.pdf"></a>
+      <a href="https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3">SOURCE HERE (MODEL)</a>
+      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-1%20BMS.pdf">SOURCE HERE (FALCON BMS SYSTEMS)</a>
+      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-34-1-1%20BMS.pdf">SOURCE HERE (FALCON BMS WEAPONS)</a>
 
       <h4>Checklists</h4>
       <p>This is not a replacement for TO's. Checklists are organizational aids and do not replace official inspection procedures. This is used to help confirm that each step was accomplished. No tech data is included in these checklists</p>
