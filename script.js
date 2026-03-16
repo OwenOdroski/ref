@@ -147,15 +147,23 @@ async function checkJSON() {
   })
 
   if(!c) {
-    document.getElementById('file-upload').style.opacity = '1'
-    document.getElementById('file-pass').style.pointerEvents = "none"
     document.getElementById('blur-back').style.display = 'block'
 
+    let signupBox = document.getElementById('file-upload');
+    let loginBox = document.getElementById('file-pass');
     let upload = document.getElementById('file')
     let form = document.getElementById('signup')
 
+    signupBox.style.opacity = '1';
+    signupBox.style.pointerEvents = 'auto';
+
+    loginBox.style.opacity = '0';
+    loginBox.style.pointerEvents = 'none';
+
     form.addEventListener("submit", async (e) => {
       const file = upload.files[0];
+      if (!file) return;
+
       const data = new FormData(form)
       const user = data.get("username")
       const key = data.get("password")
@@ -164,7 +172,6 @@ async function checkJSON() {
         const text = await file.text();   // Read file as string
         const dec = await decryptAES(text, user + key)
 
-        if (!file) return;
         decryptKey = user + key
 
         if (!dec.ok) {
@@ -190,14 +197,21 @@ async function checkJSON() {
           document.getElementById('blur-back').style.display = 'none'
           loadPage(a)
         }
-      }, 0)
+      }, 30)
 
       e.preventDefault()
     });
   } else {
-    document.getElementById('file-pass').style.opacity = '1'
-    document.getElementById('file-upload').style.pointerEvents = "none"
     document.getElementById('blur-back').style.display = 'block'
+
+    const signupBox = document.getElementById('file-upload');
+    const loginBox = document.getElementById('file-pass');
+
+    loginBox.style.opacity = '1';
+    loginBox.style.pointerEvents = 'auto';
+
+    signupBox.style.opacity = '0';
+    signupBox.style.pointerEvents = 'none';
 
     async function l(reason = '', user, key) {
       let cn = await getJSON(a, 'json')
@@ -233,7 +247,7 @@ async function checkJSON() {
 
       window.setTimeout(() => {
         l('', user, key)
-      }, 0)
+      }, 30)
 
       e.preventDefault()
     })
