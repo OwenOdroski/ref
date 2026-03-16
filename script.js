@@ -20,15 +20,6 @@ if ('serviceWorker' in navigator && register) {
     })
 
     checkJSON()
-    let check = true
-    if(isIphonePWA() || check) {
-      document.getElementById('spacer').style = 'height: 60px'
-      const items = document.getElementsByClassName("x-button");
-
-      for (let el of items) {
-        el.style = "margin-top: 50px";
-      }
-    }
   });
 }
 
@@ -56,6 +47,16 @@ window.addEventListener("load", () => {
   let diff = date - start;
   let oneDay = 1000 * 60 * 60 * 24;
   julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
+
+  let check = true
+  if(isIphonePWA() || check) {
+    document.getElementById('spacer').style = 'height: 60px'
+    const items = document.getElementsByClassName("x-button");
+
+    for (let el of items) {
+      el.style = "margin-top: 50px";
+    }
+  }
 })
 
 function setupDB() {
