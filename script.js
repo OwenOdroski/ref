@@ -147,7 +147,7 @@ async function checkJSON() {
   })
 
   if(!c) {
-    document.getElementById('file-upload').style.display = 'block'
+    document.getElementById('file-upload').style.opacity = '1'
     document.getElementById('blur-back').style.display = 'block'
 
     let upload = document.getElementById('file')
@@ -155,47 +155,52 @@ async function checkJSON() {
 
     form.addEventListener("submit", async (e) => {
       const file = upload.files[0];
-      const key = form.password.value
-      const user = form.username.value
-      e.preventDefault()
-      const text = await file.text();   // Read file as string
-      const dec = await decryptAES(text, user + key)
+      const data = new FormData(form)
+      const user = data.get("username")
+      const key = data.get("password")
 
-      if (!file) return;
-      decryptKey = user.value + key.value
+      window.setTimeout(async function() {
+        const text = await file.text();   // Read file as string
+        const dec = await decryptAES(text, user + key)
 
-      if (!dec.ok) {
-        if (dec.reason === "decrypt_failed") {
-          alert("Wrong password OR file corrupted/tampered.");
+        if (!file) return;
+        decryptKey = user + key
+
+        if (!dec.ok) {
+          if (dec.reason === "decrypt_failed") {
+            alert("Wrong password OR file corrupted/tampered.");
+          } else {
+            alert("Bad file format.");
+          }
         } else {
-          alert("Bad file format.");
+          let json = dec.value
+          window.location.hash = "#loggedin"
+
+          let d = new Date(dec.value.meta.els)
+          let td = new Date()
+
+          if(d < td) {
+            alert("Encrypted file has expired")
+            return
+          }
+
+          await saveJSON(a, "json", text);
+          document.getElementById('file-upload').style.opacity = '0'
+          document.getElementById('blur-back').style.display = 'none'
+          loadPage(a)
         }
-      } else {
-        let json = dec.value
+      }, 0)
 
-        let d = new Date(dec.value.meta.els)
-        let td = new Date()
-
-        if(d < td) {
-          alert("Encrypted file has expired")
-          return
-        }
-
-        await saveJSON(a, "json", text);
-        document.getElementById('file-upload').style.display = 'none'
-        document.getElementById('blur-back').style.display = 'none'
-        loadPage(a)
-      }
-
+      e.preventDefault()
     });
   } else {
-    document.getElementById('file-pass').style.display = 'block'
+    document.getElementById('file-pass').style.opacity = '1'
     document.getElementById('blur-back').style.display = 'block'
 
     async function l(reason = '', user, key) {
       let cn = await getJSON(a, 'json')
       decryptKey = user + key
-      console.log(user, key)
+
       let content = await decryptAES(cn, decryptKey)
       let doc = document.getElementById('pass-error')
 
@@ -212,18 +217,23 @@ async function checkJSON() {
           window.location.reload()
           return
         }
-        document.getElementById('file-pass').style.display = 'none'
+        document.getElementById('file-pass').style.opacity = '0'
         document.getElementById('blur-back').style.display = 'none'
+        window.location.hash = "#loggedin"
         loadPage(a)
       }
     }
     let login = document.getElementById('login')
     login.addEventListener("submit", (e) => {
-      let user = login.username.value
-      let key = login.password.value
-      console.log(user, key)
+      const data = new FormData(login)
+      const user = data.get("username")
+      const key = data.get("password")
+
+      window.setTimeout(() => {
+        l('', user, key)
+      }, 0)
+
       e.preventDefault()
-      l('', user, key)
     })
 
   }
@@ -234,6 +244,8 @@ async function loadPage(db) {
   let d = await getJSON(db, 'json')
   let d2 = await decryptAES(d, decryptKey)
   let data = d2.value
+
+  console.log(data, db, d, d2)
 
   if(data != null) {
     forms = data.forms
