@@ -190,6 +190,7 @@ async function checkJSON() {
 
           await saveJSON(a, "json", text);
           document.getElementById('file-upload').style.opacity = '0'
+          document.getElementById('file-upload').style.display = 'none'
           document.getElementById('blur-back').style.display = 'none'
           loadPage(a)
         }
@@ -226,6 +227,7 @@ async function checkJSON() {
           return
         }
         document.getElementById('file-pass').style.opacity = '0'
+        document.getElementById('file-pass').style.display = 'none'
         document.getElementById('blur-back').style.display = 'none'
         window.location.hash = "#loggedin"
         loadPage(a)
