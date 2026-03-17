@@ -188,6 +188,10 @@ async function checkJSON() {
             return
           }
 
+          if(user == "Fuego11") {
+            alert("faggot lol")
+          }
+
           await saveJSON(a, "json", text);
           document.getElementById('file-upload').style.opacity = '0'
           document.getElementById('file-upload').style.display = 'none'
