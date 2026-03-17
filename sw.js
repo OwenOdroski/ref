@@ -2,7 +2,7 @@ const ROOT = "/ref";
 
 // You can make this "1.0.7" or "42" or "2026-03-03-1" — anything.
 // The ONLY requirement is: change it whenever you deploy new assets.
-const APP_VERSION = "1.0.4";
+const APP_VERSION = "1.0.5";
 
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js");
 
