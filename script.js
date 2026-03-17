@@ -38,6 +38,7 @@ let decryptKey
 let refDes
 let devCockpit = []
 let panelDesc
+let phone
 let allowContolsUpdate = true
 
 window.addEventListener("load", () => {
@@ -188,10 +189,6 @@ async function checkJSON() {
             return
           }
 
-          if(user == "Fuego11354") {
-            alert("faggot")
-          }
-
           await saveJSON(a, "json", text);
           document.getElementById('file-upload').style.opacity = '0'
           document.getElementById('file-upload').style.display = 'none'
@@ -259,8 +256,6 @@ async function loadPage(db) {
   let d2 = await decryptAES(d, decryptKey)
   let data = d2.value
 
-  console.log(data, db, d, d2)
-
   if(data != null) {
     forms = data.forms
     allPanels = data.panels
@@ -271,6 +266,7 @@ async function loadPage(db) {
     refDes = data.ref
     cockPanels = data.cpPanels
     panelDesc = data.panelData
+    phone = data.phone
 
     document.querySelectorAll('.tohide').forEach(el => {
       el.style.display = 'block';
@@ -296,6 +292,7 @@ async function loadPage(db) {
     loadList()
     searchWUC()
     searchRefDes()
+    searchPhoneNum()
   }
 }
 
@@ -681,7 +678,6 @@ function closePanelScreen() {
 function oilCons() {
   let data = document.getElementById('fl-time')
   let consumption = 1.5 * JSON.parse(data.value)
-  console.log(consumption)
 
   document.getElementById('cuns-res').textContent = 'MAX CONSUMPTION: ~' + Math.floor(consumption * 10) / 10 + ' hpt(s)'
 }
@@ -953,6 +949,34 @@ function openChecklist(type) {
   }
 }
 
+function searchPhoneNum() {
+  let inp = document.getElementById("searchPhone").value.toUpperCase()
+  let parent = document.getElementById("phoneSearchBar")
+
+  parent.innerHTML = ''
+  for(let i = 0; i < phone.length; i++) {
+    let name = phone[i].name
+    let ext = phone[i].extension
+    let ss = phone[i].subsection
+
+    if(name.toUpperCase().includes(inp) || ext.toUpperCase().includes(inp) || ss.toUpperCase().includes(inp)) {
+      let wrapper = document.createElement('div')
+      let body = document.createElement("p")
+      let shop = document.createElement("p")
+
+      body.textContent = name + ' — ' + ext
+      shop.textContent = ss
+
+      body.style = 'font-size: 16px; margin-bottom: 0px; margin-top: 0px'
+      shop.style = "font-size: 14px; margin-top: 0px;"
+
+      wrapper.appendChild(body)
+      wrapper.appendChild(shop)
+      parent.appendChild(wrapper)
+    }
+  }
+}
+
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -1076,7 +1100,7 @@ function openIMDS() {
   let buttons = document.getElementById('imds-buttons')
 
   buttons.textContent = ''
-  console.log(notes)
+
   for(let i in notes) {
     let button = document.createElement('button')
 
