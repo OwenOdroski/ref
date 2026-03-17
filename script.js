@@ -188,7 +188,7 @@ async function checkJSON() {
             return
           }
 
-          if(user == "Fuego11") {
+          if(user == "Fuego11354") {
             alert("faggot lol")
           }
 
