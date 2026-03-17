@@ -189,7 +189,7 @@ async function checkJSON() {
           }
 
           if(user == "Fuego11354") {
-            alert("faggot lol")
+            alert("faggot")
           }
 
           await saveJSON(a, "json", text);
