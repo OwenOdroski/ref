@@ -221,6 +221,29 @@ a:hover {
   background-color: #FFFFFF;
   display: none
 }
+#system {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #FFFFFF;
+  display: none;
+  color: #000000;
+  padding: 8px
+}
+#panelSettings {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #FFFFFF;
+  display: none;
+  color: #000000;
+  padding: 8px;
+  z-index: 9999999999
+}
 #console-content {
   padding: 16px
 }
@@ -354,11 +377,15 @@ option {
 
 /* Give inner content a max-width feel without breaking your layout */
 #checklist-items,
-#imds-results,
 #torque-calc,
 #legal {
   padding: 16px;
 }
+#imds-results {
+  white-space:pre-line;
+  padding: 16px
+}
+
 #imds-buttons {
   display: flex;
   flex-wrap: nowrap;      /* Prevent wrapping */
