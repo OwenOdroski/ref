@@ -1,6 +1,7 @@
 // Get DB
 let root = '/ref'
 let register = false
+let version = "1.0.0"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -8,7 +9,7 @@ function isIphonePWA() {
     window.navigator.standalone === true ||
     window.matchMedia("(display-mode: standalone)").matches;
 
-  return isIOS && isStandalone;
+  return isIOS && isStandalone && window.innerWidth < 600;
 }
 
 if ('serviceWorker' in navigator && register) {
@@ -47,15 +48,23 @@ window.addEventListener("load", () => {
   let start = new Date(date.getFullYear(), 0, 0);
   let diff = date - start;
   let oneDay = 1000 * 60 * 60 * 24;
-  let check = true
   julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
 
-  if(isIphonePWA() || check) {
+  document.getElementById('app-version').innerHTML = "APP VERSION: " + version
+
+  if(isIphonePWA()) {
     document.getElementById('spacer').style = 'height: 60px'
     const items = document.getElementsByClassName("x-button");
 
     for (let el of items) {
       el.style = "margin-top: 50px";
+    }
+  } else {
+    document.getElementById('spacer').style = 'height: 8px'
+    const items = document.getElementsByClassName("x-button");
+
+    for (let el of items) {
+      el.style = "margin-top: 8px";
     }
   }
 })
@@ -179,7 +188,6 @@ async function checkJSON() {
           }
         } else {
           let json = dec.value
-          window.location.hash = "#loggedin"
 
           let d = new Date(dec.value.meta.els)
           let td = new Date()
@@ -230,7 +238,6 @@ async function checkJSON() {
         document.getElementById('file-pass').style.opacity = '0'
         document.getElementById('file-pass').style.display = 'none'
         document.getElementById('blur-back').style.display = 'none'
-        window.location.hash = "#loggedin"
         loadPage(a)
       }
     }
@@ -267,6 +274,10 @@ async function loadPage(db) {
     cockPanels = data.cpPanels
     panelDesc = data.panelData
     phone = data.phone
+
+    document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
+
+    if(data.version != version) alert('An updated ENC file is available')
 
     document.querySelectorAll('.tohide').forEach(el => {
       el.style.display = 'block';
@@ -357,7 +368,7 @@ function searchTO() {
   });
 }
 
-var scene, camera, renderer, controls, mesh, group, light, group2
+var scene, camera, renderer, controls, mesh, group, light, group2, stations
 
 // Panel Lookup
 let panels = allPanels
@@ -397,6 +408,23 @@ function startPanelScreen() {
 
     group = new THREE.Group()
     group2 = new THREE.Group()
+    stations = new THREE.Group()
+
+    let positions = [ // Name, pos, rot
+      ["9", new THREE.Vector3(5, 0, 47), 0],
+      ["8", new THREE.Vector3(5, -3, 40), 0],
+      ["7", new THREE.Vector3(5, -3, 30), 0],
+      ["6", new THREE.Vector3(5, -3, 18), 0],
+
+      ["5R", new THREE.Vector3(40, -8, 7), Math.PI / 4],
+      ["5", new THREE.Vector3(10, -10, 0), 0],
+      ["5L", new THREE.Vector3(40, -8, -7), Math.PI / 4],
+
+      ["1", new THREE.Vector3(5, 0, -47), 0],
+      ["2", new THREE.Vector3(5, -3, -40), 0],
+      ["3", new THREE.Vector3(5, -3, -30), 0],
+      ["4", new THREE.Vector3(5, -3, -18), 0],
+    ]
 
     const loader = new THREE.GLTFLoader();
 
@@ -420,6 +448,32 @@ function startPanelScreen() {
         }
       });
 
+      for(let i in positions) {
+        let pos = positions[i][1]
+        let width  = 40
+
+        if(positions[i][0].length != 1) {
+          width = 20
+        }
+
+        let mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(width, 5, 5),
+          new THREE.MeshBasicMaterial({color: 0x00FF00, transparent: true, opacity: 0.5})
+        )
+        mesh.position.copy(pos)
+        mesh.rotation.x = positions[i][2]
+        mesh.name = positions[i][0]
+        stations.add(mesh)
+      }
+      scene.add(stations)
+      stations.visible = false
+
+      let select = document.getElementById('check')
+
+      select.addEventListener('change', function(e) {
+        stations.visible = select.checked
+      })
+
       button.onclick = () => {
         if(mode3 == 0) {
           let pos = new THREE.Vector3(0 + 29, 0.5, 200)
@@ -430,7 +484,7 @@ function startPanelScreen() {
           controls.rotateSpeed = 1
           bar.style.display = 'none'
           mode3 = 1
-          button.textContent = 'Switch to Aft Cockpit'
+          button.textContent = 'Aft Cockpit'
           mesh.visible = false
           gltf.scene.visible = true
           group.visible = false
@@ -444,7 +498,7 @@ function startPanelScreen() {
           controls.rotateSpeed = 1
           bar.style.display = 'none'
           mode3 = 2
-          button.textContent = 'Switch to Panel Chart'
+          button.textContent = 'Panel Chart'
           mesh.visible = false
           gltf.scene.visible = true
           group.visible = false
@@ -456,7 +510,7 @@ function startPanelScreen() {
           controls.rotateSpeed = 1
           bar.style.display = 'block'
           mode3 = 0
-          button.textContent = 'Switch to Forward Cockpit'
+          button.textContent = 'Forward Cockpit'
           mesh.visible = true
           gltf.scene.visible = false
           group.visible = true
@@ -607,6 +661,12 @@ function startPanelScreen() {
           if(intersects.length > 0) {
             let panel = allPanels[intersects[0].object.name]
             alert(panel.type + ' Number: ' + panel.number)
+          }
+
+          intersects = raycaster.intersectObject(stations, true);
+          if(intersects.length > 0) {
+            let name = intersects[0].object.name
+            alert("STATION NUMBER: " + name)
           }
         } else {
           let intersects = raycaster.intersectObject(group2, true);
