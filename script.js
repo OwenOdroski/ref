@@ -1,5 +1,5 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
 let version = "1.0.0"
 
@@ -40,6 +40,7 @@ let refDes
 let devCockpit = []
 let panelDesc
 let phone
+let zonesEnc
 let allowContolsUpdate = true
 
 window.addEventListener("load", () => {
@@ -274,6 +275,7 @@ async function loadPage(db) {
     cockPanels = data.cpPanels
     panelDesc = data.panelData
     phone = data.phone
+    zonesEnc = data.zones
 
     document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
 
@@ -282,6 +284,10 @@ async function loadPage(db) {
     document.querySelectorAll('.tohide').forEach(el => {
       el.style.display = 'block';
     });
+
+    if(wuc == undefined) document.getElementById('WUCwrapper').style.display = 'none'
+    if(refDes == undefined) document.getElementById('refDesWrapper').style.display = 'none'
+    if(zonesEnc == undefined) document.getElementById('hide-mode').style.display = 'none'
 
     let ch = document.getElementById('ch')
 
@@ -301,8 +307,8 @@ async function loadPage(db) {
       ch.appendChild(button)
     }
     loadList()
-    searchWUC()
-    searchRefDes()
+    if(wuc != undefined) searchWUC()
+    if(refDes != undefined) searchRefDes()
     searchPhoneNum()
   }
 }
@@ -368,7 +374,7 @@ function searchTO() {
   });
 }
 
-var scene, camera, renderer, controls, mesh, group, light, group2, stations
+var scene, camera, renderer, controls, mesh, group, light, group2, stations, zones
 
 // Panel Lookup
 let panels = allPanels
@@ -409,6 +415,7 @@ function startPanelScreen() {
     group = new THREE.Group()
     group2 = new THREE.Group()
     stations = new THREE.Group()
+    zones = new THREE.Group()
 
     let positions = [ // Name, pos, rot
       ["9", new THREE.Vector3(5, 0, 47), 0],
@@ -424,6 +431,23 @@ function startPanelScreen() {
       ["2", new THREE.Vector3(5, -3, -40), 0],
       ["3", new THREE.Vector3(5, -3, -30), 0],
       ["4", new THREE.Vector3(5, -3, -18), 0],
+    ]
+    let zoneData = [ // ID, positions, size, color. (ID will be a three digit number. Odd for left/lower even for right/upper. zero for middle (second num). First will start at 1 (front) and bigger for tail)
+      ["102", new THREE.Vector3(77, 5, 0), new THREE.Vector3(51, 17, 20), 0x0000FF], // Radome/cockpit
+      ["202", new THREE.Vector3(39, 5, 0), new THREE.Vector3(25, 17, 13), 0x00FFFF], // PDU
+      ["222", new THREE.Vector3(39, 2, 10), new THREE.Vector3(25, 7, 8), 0xFF00FF], // EPU
+      ["212", new THREE.Vector3(39, 2, -10), new THREE.Vector3(25, 7, 8), 0xFF0000], // GUN
+      ["302", new THREE.Vector3(25, 2, 0), new THREE.Vector3(5, 30, 30), 0x6B8E23], // Hydro
+      ["402", new THREE.Vector3(-5, 5, 0), new THREE.Vector3(55, 5, 15), 0xFF00FF], // FUEL/AR
+      ["510", new THREE.Vector3(-20, 0, -9), new THREE.Vector3(46, 8, 4), 0xFF7F00], // Left Strake
+      ["520", new THREE.Vector3(-20, 0, 9), new THREE.Vector3(46, 8, 4), 0x7FFF00], // Right Strake
+      ["201", new THREE.Vector3(40, -10, 0), new THREE.Vector3(25, 18, 17), 0xBA55D3], // Nose/Regen
+      ["411", new THREE.Vector3(13, -10, -7), new THREE.Vector3(18, 19, 12), 0x8B4513], // Left MLG
+      ["421", new THREE.Vector3(13, -10, 7), new THREE.Vector3(18, 19, 12), 0x4B0082], // Left MLG
+      ["501", new THREE.Vector3(-10, -8, 0), new THREE.Vector3(30, 8, 14), 0xDC143C], // ADG/Eng driven/Arresting hook
+      ["440", new THREE.Vector3(8, 1, 30), new THREE.Vector3(40, 5, 40), 0xFFD700], // Left wing
+      ["440", new THREE.Vector3(8, 1, -30), new THREE.Vector3(40, 5, 40), 0xFFD700], // Right wing
+      ["604", new THREE.Vector3(-23, 20, 0), new THREE.Vector3(55, 25, 5), 0x00FF7F], // Dorsal fairing/tail
     ]
 
     const loader = new THREE.GLTFLoader();
@@ -468,10 +492,34 @@ function startPanelScreen() {
       scene.add(stations)
       stations.visible = false
 
-      let select = document.getElementById('check')
+      for(let i in zoneData) {
+        let pos = zoneData[i][1]
+        let size = zoneData[i][2]
 
-      select.addEventListener('change', function(e) {
-        stations.visible = select.checked
+        let mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(size.x, size.y, size.z),
+          new THREE.MeshBasicMaterial({color: zoneData[i][3], transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false})
+        )
+
+        mesh.position.copy(pos)
+        mesh.name = zoneData[i][0]
+        zones.add(mesh)
+      }
+      scene.add(zones)
+      zones.visible = false
+
+      let select = document.getElementById('selectors')
+      let mode3d = 2
+
+      select.addEventListener('change', (e) => {
+        const convert = ["check", "check2", "check3"]
+        const vis = [stations, zones, group]
+
+        convert.forEach((e, i) => {
+          let cb = document.getElementById(convert[i])
+          vis[i].visible = cb.checked
+          if(cb.checked) mode3d = i
+        });
       })
 
       button.onclick = () => {
@@ -484,36 +532,27 @@ function startPanelScreen() {
           controls.rotateSpeed = 1
           bar.style.display = 'none'
           mode3 = 1
-          button.textContent = 'Aft Cockpit'
-          mesh.visible = false
-          gltf.scene.visible = true
-          group.visible = false
-          group2.visible = true
-        } else if(mode3 == 1) {
-          let pos = new THREE.Vector3(0 + 15, 0.8, 200)
-          camera.position.copy(pos)
-          camera.position.x -= 0.1
-          controls.target.copy(pos)
-          controls.enableZoom = false
-          controls.rotateSpeed = 1
-          bar.style.display = 'none'
-          mode3 = 2
           button.textContent = 'Panel Chart'
           mesh.visible = false
           gltf.scene.visible = true
           group.visible = false
+          stations.visible = false
+          zones.visible = false
           group2.visible = true
         } else {
           camera.position.set(100, 60, 100)
           controls.target.set(0, 0, 0)
           controls.enableZoom = true
           controls.rotateSpeed = 1
-          bar.style.display = 'block'
+          bar.style.display = 'inline'
           mode3 = 0
-          button.textContent = 'Forward Cockpit'
+          button.textContent = 'Cockpit'
           mesh.visible = true
           gltf.scene.visible = false
-          group.visible = true
+
+          if(mode3d == 2) group.visible = true
+          if(mode3d == 1) zones.visible = true
+          if(mode3d == 0) stations.visible = true
           group2.visible = false
         }
       }
@@ -658,15 +697,58 @@ function startPanelScreen() {
       } else if(mode == 'view') {
         if(mode3 == 0) {
           let intersects = raycaster.intersectObject(group, true);
-          if(intersects.length > 0) {
-            let panel = allPanels[intersects[0].object.name]
-            alert(panel.type + ' Number: ' + panel.number)
-          }
 
-          intersects = raycaster.intersectObject(stations, true);
-          if(intersects.length > 0) {
-            let name = intersects[0].object.name
-            alert("STATION NUMBER: " + name)
+          if(group.visible) {
+            if(intersects.length > 0) {
+              let panel = allPanels[intersects[0].object.name]
+              alert(panel.type + ' Number: ' + panel.number)
+            }
+          }
+          if(stations.visible) {
+            intersects = raycaster.intersectObject(stations, true);
+            if(intersects.length > 0) {
+              let name = intersects[0].object.name
+              alert("STATION NUMBER: " + name)
+            }
+          }
+          if(zones.visible) {
+            intersects = raycaster.intersectObject(zones, true);
+            if(intersects.length > 0) {
+              let name = intersects[0].object.name
+              let data = zonesEnc[name]
+              let desc = document.getElementById('zone-body')
+
+              if(zonesEnc == undefined) {
+                alert('Update .ENC file to obtain access')
+              }
+
+              document.getElementById('zone-desc').style.display = 'block'
+              document.getElementById('zone-ident').textContent = "Zone Number: " + name
+
+              desc.innerHTML = ''
+
+              for(let i in data) {
+                if(data[i].type == 'tab') {
+                  let d = document.createElement('details')
+                  let s = document.createElement('summary')
+                  let p = document.createElement('p')
+
+                  s.textContent = data[i].name.toUpperCase()
+                  p.textContent = data[i].data.replace(/\n/g, "\n\n")
+
+                  s.style = 'color: black; font-size: 25px'
+                  p.style = "color: black"
+
+                  d.appendChild(s)
+                  d.appendChild(p)
+                  desc.appendChild(d)
+                } else {
+                  document.getElementById('zoneName').textContent = data[i].name
+                  document.getElementById('zoneDesc').textContent = data[i].data
+                }
+              }
+
+            }
           }
         } else {
           let intersects = raycaster.intersectObject(group2, true);

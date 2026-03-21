@@ -1,28 +1,31 @@
 <html>
   <head>
     <script>
-      var consoleOutput = [];
-      var ogLog = console.log;
-      var ogError = console.error;
-      var ogWarn = console.warn;
+    let active = false
+      if(active) {
+        var consoleOutput = [];
+        var ogLog = console.log;
+        var ogError = console.error;
+        var ogWarn = console.warn;
 
-      console.log = function (...args) {
-          consoleOutput.push([0, args.join(" ")]);
+        console.log = function (...args) {
+            consoleOutput.push([0, args.join(" ")]);
+
+            // Call original console.log
+            ogLog.apply(console, args);
+        };
+        console.error = function(...args) {
+          consoleOutput.push([1, args.join(" ")]);
 
           // Call original console.log
-          ogLog.apply(console, args);
-      };
-      console.error = function(...args) {
-        consoleOutput.push([1, args.join(" ")]);
+          ogError.apply(console, args);
+        }
+        console.warn = function(...args) {
+          consoleOutput.push([2, args.join(" ")]);
 
-        // Call original console.log
-        ogError.apply(console, args);
-      }
-      console.warn = function(...args) {
-        consoleOutput.push([2, args.join(" ")]);
-
-        // Call original console.log
-        ogWarn.apply(console, args);
+          // Call original console.log
+          ogWarn.apply(console, args);
+        }
       }
     </script>
     <title>Document</title>
@@ -30,15 +33,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}] -->
+    <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}]
+    [{"type": "top", "name": "", "data": ""}, {"type": "tab", "name": "", "data": ""}]
+    -->
     <div id="spacer"></div>
     <!--Usage Warning-->
     <div class="item">
@@ -135,15 +140,28 @@
       <div style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0);">
         <div style="display: flex; align-items: center;">
           <button onclick="document.getElementById('panelSettings').style.display='block'" style="margin-right: 3px; display: inline;">☰</button>
-          <button id="switch" style="margin-left: 3px; width: 150px; display: inline">Forward Cockpit</button>
+          <button id="switch" style="margin-left: 3px; width: 190px; display: inline; font-size: 14px">Forward Cockpit</button>
         </div>
       </div>
     </div>
 
     <div id="panelSettings">
       <button onclick="document.getElementById('panelSettings').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
-      <h3>Panel Settings</h3>
-      <label style="color: black">Show Stations <input type="checkbox" id="check"></label>
+      <h3>3D Enviroment Settings</h3>
+
+      <div id="selectors">
+        <label style="color: black">Show Stations <input type="radio" id="check" name="selectors"></label><br>
+        <label style="color: black" id="hide-mode">Show MX Zones <input type="radio" id="check2" name="selectors"></label><br>
+        <label style="color: black">Show Panels <input type="radio" id="check3" name="selectors" checked="true"></label><br>
+      </div>
+    </div>
+
+    <div id="zone-desc">
+      <button onclick="document.getElementById('zone-desc').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
+      <h2 id="zoneName" style="margin-bottom: -10px"></h2>
+      <span id="zone-ident" style="margin-top: -10px"></span>
+      <p id="zoneDesc" style="margin-top: 32px"></p>
+      <div id="zone-body"></div>
     </div>
 
     <div id="cockpit-desc">
@@ -154,6 +172,7 @@
       <div id="cpDesc"></div>
     </div>
 
+    <!-- References -->
     <div id="IMDS">
       <div>
         <button onclick="document.getElementById('IMDS').style.display = 'none'" style="font-size: 25px" class="x-button">✕</button>
@@ -183,8 +202,8 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
@@ -199,7 +218,7 @@
     </div>
 
     <!--WUC Search-->
-    <div class="item tohide">
+    <div class="item tohide" id="WUCwrapper">
       <h3>WUC Lookup</h3>
       <input type="text" id="searchWUC" onkeydown="searchWUC()" onkeyup="searchWUC()" placeholder="Search">
 
@@ -207,7 +226,7 @@
     </div>
 
     <!--Reference Designator-->
-    <div class="item tohide">
+    <div class="item tohide" id="refDesWrapper">
       <h3>Reference Designator Search</h3>
       <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="Work Unit Code">
 
@@ -245,11 +264,11 @@
     </div>
 
     <div class="item">
-      <button id="clearIndexed">Clear IndexedDB</button>
-      <button onclick="clearAppStorage()">Clear All</button>
-      <button onclick="viewConsole()">View Console</button>
-      <button onclick="document.getElementById('system').style.display = 'block'">System</button>
-      <button onclick="openLegal()">Documentation</button>
+      <button id="clearIndexed" class="footer">Clear IndexedDB</button>
+      <button onclick="clearAppStorage()" class="footer">Clear All</button>
+      <button onclick="viewConsole()" class="footer">View Console</button>
+      <button onclick="document.getElementById('system').style.display = 'block'" class="footer">System</button>
+      <button onclick="openLegal()" class="footer">Documentation</button>
     </div>
 
     <div id="console">

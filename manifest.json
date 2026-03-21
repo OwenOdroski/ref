@@ -1,6 +1,6 @@
 {
-  "name": "CC Reference App",
-  "short_name": "CC",
+  "name": "APG Reference App",
+  "short_name": "APG",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0f1214",
