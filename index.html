@@ -1,7 +1,7 @@
 <html>
   <head>
     <script>
-    let active = true
+    let active = false
       if(active) {
         var consoleOutput = [];
         var ogLog = console.log;
@@ -33,12 +33,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}]
@@ -72,7 +72,7 @@
     </div>
 
     <!-- Upload document -->
-    <div class="item" id="file-upload">
+    <div class="item popup" id="file-upload">
       <h2 style="margin-left: 16px; margin-top: 12px">Welcome!</h2>
       <p style="margin-left: 16px">Encrypted Data File (.enc)</p>
       <input type="file" id="file" accept=".enc">
@@ -89,7 +89,7 @@
     </div>
 
     <!--Confirm password-->
-    <div class="item" id="file-pass">
+    <div class="item popup" id="file-pass">
       <form id="login" autocomplete="on">
         <p style="margin-left: 16px">Username</p>
         <input type="text" name="username" placeholder="Username" id="user-preload" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false" required>
@@ -103,6 +103,35 @@
 
       <button onclick="document.getElementById('file-pass').style.display='none';document.getElementById('blur-back').style.display='none'; ">Quick Access</button>
     </div>
+
+    <!-- Load in message -->
+    <div class="item popup" id="load-message" style="display: none">
+      <h2>Read Before Use</h2>
+
+      <div style="height: 300px; overflow-y: scroll; margin: 8px; padding: 8px; background-color: rgba(0,0,0,0.18)">
+        <h4>Information Available</h4>
+        <p>The information contained in this program is for general knowledge of the F-16. All information contained is sourced from publically available sources which may be incorrect or outdated. Be aware that information may not be accurate.</p>
+
+        <strong>TOOLS</strong>
+        <p>Within the panel page is a "✏️" button that allows you to write notes. These notes are NOT ENCRYPTED and rely on the devices security. Use with caution.</p>
+        <p>Pre-filled forms are examples of commonly used write ups. They are written IAW 00-20-1 (outdated source released by Tinker AFB)</p>
+        <p>Fuel calculator is a simple formula that converts totalizer pounds to gallons and returns a servicing prediction. Do not use this as a replacement for official fuel servicing charts.</p>
+        <p>Oil consumption calculator is also just a simple formula (1.5 * flight time).</p>
+        <p>The torque converter is a tool that alters the amount on a torque wrench when using an inline extension (formula given in documentation page). This does not alter the torque applied to the fastener. Do not use for official maintenance.</p>
+
+        <p>The tools available are not to be used as a maintenance guide. This is not a replacement for TOs nor should it be used along side TOs. There is no classified material in this app but encryption methods are used to prevent unauthorized usage due to the ease of acces of compiled information.</p>
+        <p>By acknowledging or using this app, you agree that: </p>
+        <p> - It is the users responsibility to verify information with official sources.</p>
+        <p> - The developer of this application assumes to responsibility for misuse or errors.<p>
+        <p> - You will not use this as a substitute for tech data or formal training</p>
+
+        <p>If you are unsure about any information, DO NOT USE IT. Refer to official documentation.</p>
+        <p>Sources for all information and 3D models are in the "documentation" page</p>
+      </div>
+
+      <button onclick="document.getElementById('load-message').style.display='none';document.getElementById('blur-back').style.display='none';">Acknowledge</button>
+    </div>
+
 
     <!-- Oil Consumption limit calc -->
     <div class="item">
@@ -157,7 +186,10 @@
     </div>
 
     <div id="zone-desc">
-      <button onclick="document.getElementById('zone-desc').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
+      <div style="display: flex; width: 200px">
+        <button onclick="document.getElementById('zone-desc').style.display = 'none'" style="font-size: 15px; display: inline" class="x-button">✕</button>
+        <button id="zone-note" style="font-size: 15px; display: inline" class="x-button">✏️</button>
+      </div>
       <h2 id="zoneName" style="margin-bottom: -10px"></h2>
       <span id="zone-ident" style="margin-top: -10px"></span>
       <p id="zoneDesc" style="margin-top: 32px"></p>
@@ -165,11 +197,22 @@
     </div>
 
     <div id="cockpit-desc">
-      <button onclick="document.getElementById('cockpit-desc').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
+      <div style="display: flex; width: 200px">
+        <button onclick="document.getElementById('cockpit-desc').style.display = 'none'" style="font-size: 15px; display: inline" class="x-button">✕</button>
+        <button id="cockpit-note" style="font-size: 15px; display: inline" class="x-button">✏️</button>
+      </div>
       <h2 id="cpName"></h2>
       <span id="ident"></span>
       <p id="desccp"></p>
       <div id="cpDesc"></div>
+    </div>
+
+    <!-- Note popup -->
+    <div class="item popup" id="note-wrapper" style="display: none">
+      <h2>Edit Note</h2>
+      <textarea id="note-box" rows="5" style="width: 80%"></textarea><br>
+      <button id="save-note">Save</button>
+      <button onclick="if(confirm('Discard note?')) {document.getElementById('note-box').value='';document.getElementById('note-wrapper').style.display='none';}">Discard</button>
     </div>
 
     <!-- References -->
@@ -202,8 +245,8 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
@@ -264,8 +307,8 @@
     </div>
 
     <div class="item">
-      <button id="clearIndexed" class="footer">Clear IndexedDB</button>
-      <button onclick="clearAppStorage()" class="footer">Clear All</button>
+      <button id="clearIndexed" class="footer">Delete .ENC</button>
+      <button onclick="if(confirm('This will delete your .ENC file and cached storage (notes stay). Are you sure?'))clearAppStorage()" class="footer">Reset App</button>
       <button onclick="viewConsole()" class="footer">View Console</button>
       <button onclick="document.getElementById('system').style.display = 'block'" class="footer">System</button>
       <button onclick="openLegal()" class="footer">Documentation</button>

@@ -1,7 +1,7 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
-let version = "1.1.0"
+let version = "1.2.0"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -41,6 +41,8 @@ let devCockpit = []
 let panelDesc
 let phone
 let zonesEnc
+let userNotes
+let DB
 let allowContolsUpdate = true
 
 window.addEventListener("load", () => {
@@ -145,16 +147,28 @@ function hasJSON(db, tag) {
     req.onerror = () => reject(req.error);
   });
 }
-
+// ✏️
 async function checkJSON() {
   let a = await setupDB()
   let c = await hasJSON(a, 'json')
+  let u = await hasJSON(a, 'user')
   let clear = document.getElementById('clearIndexed')
 
+  DB = a
+
+  if(!u) {
+    saveJSON(a, 'user', JSON.stringify({zones: {}, panelData: {}, notes: {}}))
+  } else {
+    let g = await getJSON(a, 'user')
+    userNotes = JSON.parse(g)
+  }
+
   clear.addEventListener('mousedown', async function() {
-    await deleteJSON(a, 'json')
-    alert('IndexedDB cleared')
-    window.location.reload()
+    if(confirm('Are you sure you want to delete your .ENC file?')) {
+      await deleteJSON(a, 'json')
+      alert('IndexedDB cleared')
+      window.location.reload()
+    }
   })
 
   if(!c) {
@@ -197,7 +211,7 @@ async function checkJSON() {
             alert("Encrypted file has expired")
             return
           }
-
+          document.getElementById('load-message').style.display = 'block'
           await saveJSON(a, "json", text);
           document.getElementById('file-upload').style.opacity = '0'
           document.getElementById('file-upload').style.display = 'none'
@@ -715,39 +729,71 @@ function startPanelScreen() {
             intersects = raycaster.intersectObject(zones, true);
             if(intersects.length > 0) {
               let name = intersects[0].object.name
-              let data = zonesEnc[name]
+              let data = [...zonesEnc[name]]
               let desc = document.getElementById('zone-body')
 
               if(zonesEnc == undefined) {
                 alert('Update .ENC file to obtain access')
               }
 
+              let note = document.getElementById('zone-note')
+
+              document.getElementById('note-box').value = ''
               document.getElementById('zone-desc').style.display = 'block'
               document.getElementById('zone-ident').textContent = "Zone Number: " + name
 
-              desc.innerHTML = ''
+              let retry = () => {
+                desc.innerHTML = ''
 
-              for(let i in data) {
-                if(data[i].type == 'tab') {
-                  let d = document.createElement('details')
-                  let s = document.createElement('summary')
-                  let p = document.createElement('p')
+                if(userNotes.zones[name] != undefined && userNotes.zones[name] != '') {
+                  data.push({type: "tab", name: "notes", data: userNotes.zones[name]})
+                }
 
-                  s.textContent = data[i].name.toUpperCase()
-                  p.textContent = data[i].data.replace(/\n/g, "\n\n")
+                for(let i in data) {
+                  if(data[i].type == 'tab') {
+                    let d = document.createElement('details')
+                    let s = document.createElement('summary')
+                    let p = document.createElement('p')
 
-                  s.style = 'color: black; font-size: 25px'
-                  p.style = "color: black"
+                    s.textContent = data[i].name.toUpperCase()
+                    p.textContent = data[i].data.replace(/\n/g, "\n\n")
 
-                  d.appendChild(s)
-                  d.appendChild(p)
-                  desc.appendChild(d)
-                } else {
-                  document.getElementById('zoneName').textContent = data[i].name
-                  document.getElementById('zoneDesc').textContent = data[i].data
+                    s.style = 'color: black; font-size: 25px'
+                    p.style = "color: black"
+
+                    d.appendChild(s)
+                    d.appendChild(p)
+                    desc.appendChild(d)
+                  } else {
+                    document.getElementById('zoneName').textContent = data[i].name
+                    document.getElementById('zoneDesc').textContent = data[i].data
+                  }
                 }
               }
+              retry()
+              note.onclick = function() {
+                document.getElementById('note-wrapper').style.display = 'block'
 
+                if(userNotes.zones[name] != undefined) {
+                  document.getElementById('note-box').value = userNotes.zones[name]
+                }
+
+                document.getElementById('save-note').onclick = () => {
+                  let val = document.getElementById('note-box')
+
+                  if(userNotes.zones != undefined) {
+                    userNotes.zones[name] = val.value
+                    saveJSON(DB, 'user', JSON.stringify(userNotes))
+                    document.getElementById('note-wrapper').style.display = 'none'
+
+                    if(data[data.length - 1].name == 'notes') {
+                      data.pop()
+                    }
+
+                    retry()
+                  }
+                }
+              }
             }
           }
         } else {
@@ -762,37 +808,68 @@ function startPanelScreen() {
               let ident = format(panel.cords[0]) + '/' + format(panel.cords[1]) + '/' + format(panel.cords[2])
 
               wrapper.style.display = 'block'
+
               document.getElementById('cpName').style = 'color: black'
               document.getElementById('cpName').textContent = panel.title.toUpperCase()
-
+              document.getElementById('note-box').value = ''
               document.getElementById('ident').style = 'color: black; font-size: 13px; margin-top: -16px'
               document.getElementById('ident').textContent = ident
 
-              let desc = document.getElementById('cpDesc')
-              desc.innerHTML = ''
+              let note = document.getElementById('cockpit-note')
 
-              for(let i in panelDesc[ident]) {
-                let curr = panelDesc[ident][i]
+              let retry = () => {
+                let desc = document.getElementById('cpDesc')
+                desc.innerHTML = ''
 
-                if(curr.type == 'tab') {
-                  let d = document.createElement('details')
-                  let s = document.createElement('summary')
-                  let p = document.createElement('p')
+                if(userNotes != undefined && userNotes.panelData[intersects[0].object.name] != undefined && userNotes.panelData[intersects[0].object.name] != '') {
+                  panelDesc[ident].push({type: "tab", name: "notes", data: userNotes.panelData[intersects[0].object.name]})
+                }
 
-                  s.textContent = curr.name.toUpperCase()
-                  p.textContent = curr.data.replace(/\n/g, "\n\n")
+                for(let i in panelDesc[ident]) {
+                  let curr = panelDesc[ident][i]
 
-                  s.style = 'color: black; font-size: 25px'
-                  p.style = "color: black"
+                  if(curr.type == 'tab') {
+                    let d = document.createElement('details')
+                    let s = document.createElement('summary')
+                    let p = document.createElement('p')
 
-                  d.appendChild(s)
-                  d.appendChild(p)
-                  desc.appendChild(d)
-                } else {
-                  let d = document.getElementById('desccp')
+                    s.textContent = curr.name.toUpperCase()
+                    p.textContent = curr.data.replace(/\n/g, "\n\n")
 
-                  d.style = 'color: black'
-                  d.textContent = curr.data
+                    s.style = 'color: black; font-size: 25px'
+                    p.style = "color: black"
+
+                    d.appendChild(s)
+                    d.appendChild(p)
+                    desc.appendChild(d)
+                  } else {
+                    let d = document.getElementById('desccp')
+
+                    d.style = 'color: black'
+                    d.textContent = curr.data
+                  }
+                }
+              }
+              retry()
+
+              note.onclick = function() {
+                if(userNotes != undefined && userNotes.panelData[intersects[0].object.name] != undefined) {
+                  document.getElementById('note-box').value = userNotes.panelData[intersects[0].object.name]
+                }
+
+                document.getElementById('note-wrapper').style.display = 'block'
+
+                document.getElementById('save-note').onclick = function() {
+                  let val = document.getElementById('note-box')
+
+                  userNotes.panelData[intersects[0].object.name] = val.value
+                  saveJSON(DB, 'user', JSON.stringify(userNotes))
+                  document.getElementById('note-wrapper').style.display = 'none'
+
+                  if(panelDesc[ident][panelDesc[ident].length - 1].name == 'notes') {
+                    panelDesc[ident].pop()
+                  }
+                  retry()
                 }
               }
             }
@@ -903,7 +980,7 @@ function searchRefDes() {
   for(let i = 0; i < refDes.length; i++) {
     if(refDes[i].ref.toLowerCase().includes(input) || refDes[i].wuc.toLowerCase().includes(input)) {
       let div = document.createElement('div')
-      let text = document.createTextNode("WUC: " + refDes[i].wuc + " — Ref Designator: " + refDes[i].ref)
+      let text = document.createTextNode("WUC: " + refDes[i].wuc + " — Ref Des: " + refDes[i].ref)
 
       div.appendChild(text)
       div.appendChild(document.createElement('br'))
