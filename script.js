@@ -1,5 +1,5 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
 let version = "1.2.0"
 
@@ -43,6 +43,7 @@ let phone
 let zonesEnc
 let userNotes
 let DB
+let systems
 let allowContolsUpdate = true
 
 window.addEventListener("load", () => {
@@ -152,6 +153,7 @@ async function checkJSON() {
   let a = await setupDB()
   let c = await hasJSON(a, 'json')
   let u = await hasJSON(a, 'user')
+  let isWebAuthn = localStorage.getItem('isWebAuthn') // Shows if the user is using WebAuthn verification or not
   let clear = document.getElementById('clearIndexed')
 
   DB = a
@@ -166,7 +168,7 @@ async function checkJSON() {
   clear.addEventListener('mousedown', async function() {
     if(confirm('Are you sure you want to delete your .ENC file?')) {
       await deleteJSON(a, 'json')
-      alert('IndexedDB cleared')
+      alert('.ENC cleared')
       window.location.reload()
     }
   })
@@ -179,7 +181,7 @@ async function checkJSON() {
     let upload = document.getElementById('file')
     let form = document.getElementById('signup')
 
-    loginBox.style.display = 'none'
+    signupBox.style.display = 'block'
 
     form.addEventListener("submit", async (e) => {
       const file = upload.files[0];
@@ -194,6 +196,9 @@ async function checkJSON() {
         const dec = await decryptAES(text, user + key)
 
         decryptKey = user + key
+
+        isWebAuthn = document.getElementById('webAuthn').checked
+        localStorage.setItem("isWebAuthn", isWebAuthn)
 
         if (!dec.ok) {
           if (dec.reason === "decrypt_failed") {
@@ -212,11 +217,23 @@ async function checkJSON() {
             return
           }
           document.getElementById('load-message').style.display = 'block'
-          await saveJSON(a, "json", text);
           document.getElementById('file-upload').style.opacity = '0'
           document.getElementById('file-upload').style.display = 'none'
-          document.getElementById('blur-back').style.display = 'none'
-          loadPage(a)
+
+          // Handle WebAuthn
+          if(isWebAuthn) {
+            await registerPasskey(user); // better to use username, not username+password
+
+            const encryptedBlob = await encryptJsonWithPasskey(dec.value);
+
+            await saveJSON(a, "json", JSON.stringify(encryptedBlob));
+            await saveJSON(a, "authMode", "webauthn");
+
+            loadPage(dec.value, true)
+          } else {
+            await saveJSON(a, "json", text);
+            loadPage(a)
+          }
         }
       }, 30)
 
@@ -225,22 +242,35 @@ async function checkJSON() {
   } else {
     document.getElementById('blur-back').style.display = 'block'
 
-    const signupBox = document.getElementById('file-upload');
-    const loginBox = document.getElementById('file-pass');
+    if(isWebAuthn != "true") {
+      const signupBox = document.getElementById('file-upload');
+      const loginBox = document.getElementById('file-pass');
 
-    signupBox.style.display = 'none';
+      loginBox.style.display = 'block';
 
-    async function l(reason = '', user, key) {
-      let cn = await getJSON(a, 'json')
-      decryptKey = user + key
+      async function l(reason = '', user, key) {
+        let cn = await getJSON(a, 'json')
+        decryptKey = user + key
 
-      let content = await decryptAES(cn, decryptKey)
-      let doc = document.getElementById('pass-error')
+        let content = await decryptAES(cn, decryptKey)
+        let doc = document.getElementById('pass-error')
 
-      if(!content.ok) {
-        doc.innerHTML = "Error decrypting file"
-        return
-      } else {
+        if(!content.ok) {
+          // Check if web authn was used before
+          try {
+            let isWeb = JSON.parse(cn)
+            let auth = await decryptAES(isWeb.data, decryptKey)
+
+            if(auth.errorMessage == "Failed to execute 'atob' on 'Window': The string to be decoded is not correctly encoded.") {
+              alert(".ENC not properly encoded. If you used WebAuthn before, a username and password will not work.")
+              return
+            }
+            content = {value: auth}
+          } catch {
+            doc.innerHTML = "Error decrypting file"
+            return
+          }
+        }
         let d = new Date(content.value.meta.els)
         let td = new Date()
 
@@ -254,29 +284,52 @@ async function checkJSON() {
         document.getElementById('file-pass').style.display = 'none'
         document.getElementById('blur-back').style.display = 'none'
         loadPage(a)
+
+      }
+      let login = document.getElementById('login')
+      login.addEventListener("submit", (e) => {
+        const data = new FormData(login)
+        const user = data.get("username")
+        const key = data.get("password")
+
+        window.setTimeout(() => {
+          l('', user, key)
+        }, 30)
+
+        e.preventDefault()
+      })
+
+    } else {
+      console.log(isWebAuthn)
+      // Handle sign in with WebAuthn
+      try {
+        let cn = await getJSON(a, 'json');
+        let savedBlob = JSON.parse(cn);   // because you saved it as JSON string
+        let dec = await decryptJsonWithPasskey(savedBlob);
+
+        loadPage(dec, true)
+
+        document.getElementById('file-pass').style.opacity = '0'
+        document.getElementById('file-pass').style.display = 'none'
+        document.getElementById('blur-back').style.display = 'none'
+      } catch {
+        alert('There was an error accessing WebAuthn')
+        document.getElementById('blur-back').style.display = 'none'
       }
     }
-    let login = document.getElementById('login')
-    login.addEventListener("submit", (e) => {
-      const data = new FormData(login)
-      const user = data.get("username")
-      const key = data.get("password")
-
-      window.setTimeout(() => {
-        l('', user, key)
-      }, 30)
-
-      e.preventDefault()
-    })
-
   }
 }
 checkJSON()
 
-async function loadPage(db) {
-  let d = await getJSON(db, 'json')
-  let d2 = await decryptAES(d, decryptKey)
-  let data = d2.value
+async function loadPage(db, isWebAuthn) {
+  let data
+  if(!isWebAuthn) {
+    let d = await getJSON(db, 'json')
+    let d2 = await decryptAES(d, decryptKey)
+    data = d2.value
+  } else {
+    data = db
+  }
 
   if(data != null) {
     forms = data.forms
@@ -290,6 +343,7 @@ async function loadPage(db) {
     panelDesc = data.panelData
     phone = data.phone
     zonesEnc = data.zones
+    systems = data.ops
 
     document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
 
@@ -1189,6 +1243,10 @@ function searchPhoneNum() {
       body.style = 'font-size: 16px; margin-bottom: 0px; margin-top: 0px'
       shop.style = "font-size: 14px; margin-top: 0px;"
 
+      wrapper.addEventListener('mousedown', () => {
+        window.location.href='tel:2604783' + ext
+      })
+
       wrapper.appendChild(body)
       wrapper.appendChild(shop)
       parent.appendChild(wrapper)
@@ -1241,6 +1299,73 @@ async function clearAppStorage({ reload = true } = {}) {
   if (reload) {
     location.reload();
   }
+}
+
+function convert(text) {
+  // Converts text into HTML
+  let open = ["<b>", "<i>", "<u>"]
+  let close = ["</b>", "</i>", "</u>"]
+  let detOpen = ["s//", "i//", "u//"]
+  let detClose = ["//s", "//i", "//u"]
+  let output = text.replaceAll(/\n/g, '<div style="height: 15px"></div>')
+
+  for(let i = 0; i < open.length; i++) {
+    output = output.replaceAll(detClose[i], close[i]) // Close
+    output = output.replaceAll(detOpen[i], open[i]) // Open
+  }
+
+  return output
+}
+
+function openSystems() {
+  document.getElementById('systems-wrapper').style.display = 'block'
+
+  let openSys = (name) => {
+    let con = {
+      ele: "Electrical Systems",
+      env: "Enviromental Systems",
+      hyd: "Hydraulic Systems",
+      fuel: "Fuel Systems",
+      eng: "Engine Systems",
+      brake: "Brake System"
+    }
+    // Opens the file from the enc file, parses into HTML, then HTML
+    if(systems[name] != undefined) {
+      let sys = systems[name]
+      document.getElementById('sys-popup').style.display = 'block'
+      document.getElementById('sys-tab').innerHTML = ''
+
+      for(let i in sys) {
+        if(sys[i].type == 'top') {
+          document.getElementById('sys-name').textContent = con[name]
+          document.getElementById('sys-too').innerHTML = convert(sys[i].data)
+        } else if(sys[i].type == 'tab') {
+          let d = document.createElement('details')
+          let s = document.createElement('summary')
+          let p = document.createElement('p')
+
+          s.textContent = sys[i].name.toUpperCase()
+          p.innerHTML = convert(sys[i].data)
+
+          s.style = 'color: black; font-size: 25px'
+          p.style = "color: black"
+
+          d.appendChild(s)
+          d.appendChild(p)
+          document.getElementById('sys-tab').appendChild(d)
+        }
+      }
+    } else {
+      alert('Error loading this page. Update .ENC ?')
+    }
+  }
+
+  document.getElementById('sys-ele').onclick = () => { openSys('ele') }
+  document.getElementById('sys-env').onclick = () => { openSys('env') }
+  document.getElementById('sys-hyd').onclick = () => { openSys('hyd') }
+  document.getElementById('sys-fuel').onclick = () => { openSys('fuel') }
+  document.getElementById('sys-eng').onclick = () => { openSys('eng') }
+  document.getElementById('sys-brake').onclick = () => { openSys('brake') }
 }
 
 function openForms(name) {
@@ -1430,73 +1555,3 @@ window.setTimeout(function() {
     updateTorqueIn(deg)
   })
 }, 100)
-
-
-// ----- SECURITY ------
-async function decryptAES(base64Data, password) {
-  const enc = new TextEncoder();
-  const dec = new TextDecoder();
-
-  try {
-    const combined = base64ToBytes(base64Data);
-
-    // Basic sanity checks (helps catch wrong file / truncated data)
-    if (combined.length < 16 + 12 + 1) {
-      return { ok: false, reason: "bad_format", error: "Too short" };
-    }
-
-    const salt = combined.slice(0, 16);
-    const iv = combined.slice(16, 28);
-    const ciphertext = combined.slice(28);
-
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveKey"]
-    );
-
-    const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
-      keyMaterial,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["decrypt"]
-    );
-
-    // If password wrong OR data tampered/corrupted -> this throws
-    const decryptedBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      key,
-      ciphertext
-    );
-
-    const text = dec.decode(decryptedBuf);
-
-    // If you expect JSON, parse it; JSON parse failure is NOT a crypto failure
-    try {
-      return { ok: true, value: JSON.parse(text) };
-    } catch {
-      return { ok: true, value: text, warning: "not_json" };
-    }
-  } catch (err) {
-    // AES-GCM failures (wrong password / tamper / corrupt) land here
-    // In most browsers it's DOMException: OperationError
-    return {
-      ok: false,
-      reason: "decrypt_failed",
-      errorName: err?.name || "Error",
-      errorMessage: err?.message || String(err)
-    };
-  }
-}
-
-function base64ToBytes(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
