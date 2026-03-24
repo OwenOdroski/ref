@@ -1,7 +1,7 @@
 // Get DB
-let root = ''
+let root = '/ref'
 let register = false
-let version = "1.2.0"
+let version = "2.0.0"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
