@@ -1,7 +1,7 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
-let version = "2.0.0"
+let version = "2.2.0"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -347,7 +347,10 @@ async function loadPage(db, isWebAuthn) {
 
     document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
 
-    if(data.version != version) alert('An updated ENC file is available')
+    if(data.version != version) {
+      document.getElementById('updateNotice').style.display = 'block'
+      document.getElementById('ud-text').innerHTML = data.version + ' → ' + version
+    }
 
     document.querySelectorAll('.tohide').forEach(el => {
       el.style.display = 'block';
@@ -1244,7 +1247,36 @@ function searchPhoneNum() {
       shop.style = "font-size: 14px; margin-top: 0px;"
 
       wrapper.addEventListener('mousedown', () => {
-        window.location.href='tel:2604783' + ext
+        if(ext.split('/').length != 1) {
+          document.getElementById('blur-back').style.display = 'block'
+          document.getElementById('ext-ask').style.display = 'block'
+
+          document.getElementById('blur-back').onclick = function() {
+            document.getElementById('blur-back').style.display = 'none'
+            document.getElementById('ext-ask').style.display = 'none'
+          }
+
+          let wrapper = document.getElementById('ext')
+          let exts = ext.split('/')
+
+          wrapper.innerHTML = ''
+          for(let i in exts) {
+            let button = document.createElement('button')
+
+            button.textContent = exts[i]
+            button.onclick = function() {
+              document.getElementById('blur-back').style.display = 'none'
+              document.getElementById('ext-ask').style.display = 'none'
+              window.location.href='tel:2604783' + exts[i]
+
+              document.getElementById('blur-back').onclick = ''
+            }
+
+            wrapper.appendChild(button)
+          }
+        } else {
+          window.location.href='tel:2604783' + ext
+        }
       })
 
       wrapper.appendChild(body)
@@ -1327,8 +1359,8 @@ function openSystems() {
       hyd: "Hydraulic Systems",
       fuel: "Fuel Systems",
       eng: "Engine Systems",
-      brake: "Brake System"
     }
+
     // Opens the file from the enc file, parses into HTML, then HTML
     if(systems[name] != undefined) {
       let sys = systems[name]
@@ -1340,32 +1372,63 @@ function openSystems() {
           document.getElementById('sys-name').textContent = con[name]
           document.getElementById('sys-too').innerHTML = convert(sys[i].data)
         } else if(sys[i].type == 'tab') {
-          let d = document.createElement('details')
-          let s = document.createElement('summary')
-          let p = document.createElement('p')
+          if(sys[i].name != '') {
+            let d = document.createElement('details')
+            let s = document.createElement('summary')
+            let p = document.createElement('p')
 
-          s.textContent = sys[i].name.toUpperCase()
-          p.innerHTML = convert(sys[i].data)
+            s.textContent = sys[i].name.toUpperCase()
+            p.innerHTML = convert(sys[i].data)
 
-          s.style = 'color: black; font-size: 25px'
-          p.style = "color: black"
+            s.style = 'color: black; font-size: 25px'
+            p.style = "color: black"
 
-          d.appendChild(s)
-          d.appendChild(p)
-          document.getElementById('sys-tab').appendChild(d)
+            d.appendChild(s)
+            d.appendChild(p)
+            document.getElementById('sys-tab').appendChild(d)
+          }
         }
       }
     } else {
-      alert('Error loading this page. Update .ENC ?')
+      alert('There was an error loading this page.')
     }
   }
+  let cn = ['sys-ele', 'sys-env', 'sys-hyd', 'sys-fuel', 'sys-eng', 'sys-brake']
+  let con = {
+    ele: "Electrical Systems",
+    env: "Enviromental Systems",
+    hyd: "Hydraulic Systems",
+    fuel: "Fuel Systems",
+    eng: "Engine Systems",
+  }
+  let wrapper = document.getElementById('theory-wrapper')
+  let len = 0
 
-  document.getElementById('sys-ele').onclick = () => { openSys('ele') }
-  document.getElementById('sys-env').onclick = () => { openSys('env') }
-  document.getElementById('sys-hyd').onclick = () => { openSys('hyd') }
-  document.getElementById('sys-fuel').onclick = () => { openSys('fuel') }
-  document.getElementById('sys-eng').onclick = () => { openSys('eng') }
-  document.getElementById('sys-brake').onclick = () => { openSys('brake') }
+  if(systems == undefined) {
+    let p = document.createElement('p')
+    p.innerHTML = 'You have no systems data or it failed to load. Maybe update .ENC?'
+    wrapper.appendChild(p)
+    return
+  }
+
+  wrapper.innerHTML = ''
+  for(let i in cn) {
+    let name = cn[i].slice(4, 10)
+    let text = con[name]
+
+    if(systems[name] != undefined) {
+      len += 1
+      let button = document.createElement('button')
+
+      button.textContent = text
+      button.onclick = function() {
+        openSys(name)
+      }
+
+      wrapper.appendChild(button)
+      wrapper.appendChild(document.createElement('br'))
+    }
+  }
 }
 
 function openForms(name) {

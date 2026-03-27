@@ -33,13 +33,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/security.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/security.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}]
@@ -53,6 +53,10 @@
     </div>
     <div id="blur-back"></div>
     <!--Fuel Load Calc-->
+    <div class="item" id="updateNotice" style="display: none">
+      <h3>An updated .ENC is available</h3>
+      <p id="ud-text"></p>
+    </div>
     <div class="item">
       <h3>Fuel Load calculator</h3>
       <div>
@@ -111,22 +115,18 @@
     <div class="item popup" id="load-message" style="display: none">
       <h2>Read Before Use</h2>
 
-      <div style="height: 300px; overflow-y: scroll; margin: 8px; padding: 8px; background-color: rgba(0,0,0,0.18)">
-        <h4>Information Available</h4>
-        <p>The information contained in this program is for general knowledge of the F-16. All information contained is sourced from publically available sources which may be incorrect or outdated. Be aware that information may not be accurate.</p>
-
-        <strong>TOOLS</strong>
+      <div style="height: 300px; overflow-y: scroll; margin: 8px; padding: 8px; background-color: rgba(0,0,0,0.18); color: white">
+        <h3>TOOLS</h3>
         <p>Within the panel page is a "✏️" button that allows you to write notes. These notes are NOT ENCRYPTED and rely on the devices security. Use with caution.</p>
         <p>Pre-filled forms are examples of commonly used write ups. They are written IAW 00-20-1 (outdated source released by Tinker AFB)</p>
         <p>Fuel calculator is a simple formula that converts totalizer pounds to gallons and returns a servicing prediction. Do not use this as a replacement for official fuel servicing charts.</p>
         <p>Oil consumption calculator is also just a simple formula (1.5 * flight time).</p>
         <p>The torque converter is a tool that alters the amount on a torque wrench when using an inline extension (formula given in documentation page). This does not alter the torque applied to the fastener. Do not use for official maintenance.</p>
 
-        <p>The tools available are not to be used as a maintenance guide. This is not a replacement for TOs nor should it be used along side TOs. There is no classified material in this app but encryption methods are used to prevent unauthorized usage due to the ease of acces of compiled information.</p>
-        <p>By acknowledging or using this app, you agree that: </p>
-        <p> - It is the users responsibility to verify information with official sources.</p>
-        <p> - The developer of this application assumes to responsibility for misuse or errors.<p>
-        <p> - You will not use this as a substitute for tech data or formal training</p>
+        <h3>USAGE</h3>
+        <p>This is an unofficial study guide. This is NOT to be used for maintenance, as a replacement for tech data, or operational use cases.</p>
+        <p>The information contained in this study guide is from publically available sources. No tech data was used in the creation of this. This study guide may still contain sensitive information (unknown to the creator) so do not attempt to redistribute it. The data file is embedded with identifiable information that cannot be removed. If anyone attempts to distribute, you will be found.</p>
+        <p>The users assumes all responsibility for how this information is used.</p>
 
         <p>If you are unsure about any information, DO NOT USE IT. Refer to official documentation.</p>
         <p>Sources for all information and 3D models are in the "documentation" page</p>
@@ -223,14 +223,9 @@
     <!-- Systems -->
     <div id="systems-wrapper">
       <button onclick="document.getElementById('systems-wrapper').style.display = 'none'" style="font-size: 15px; display: inline" class="x-button">✕</button>
-      <h1>Systems</h1>
-      <p>This page explains the theory behind all main systems in the F-16. The system descriptions are simplified.</p>
-      <button id="sys-ele">Electrical</button>
-      <button id="sys-env">Enviromental</button>
-      <button id="sys-hyd">Hydraulic</button>
-      <button id="sys-fuel">Fuel</button>
-      <button id="sys-eng">Engine</button>
-      <button id="sys-brake">Brakes</button>
+      <h2>Systems</h2>
+      <p>This page explains the theory behind all main systems in the F-16. Keep in mind that these are simplified explanations. Not all components will be listed and not all systems will be explained. This does not override GS manuals.</p>
+      <div id="theory-wrapper"></div>
     </div>
 
     <div id="sys-popup">
@@ -270,8 +265,8 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
@@ -308,6 +303,12 @@
       <input type="text" id="searchPhone" onkeydown="searchPhoneNum()" onkeyup="searchPhoneNum()" placeholder="Shop/Ext">
 
       <div id="phoneSearchBar" class="searchBar"></div>
+    </div>
+
+    <!-- In case of multiple extensions -->
+    <div class="popup item" id="ext-ask">
+      <h3>Choose Extension</h3>
+      <div id="ext"></div>
     </div>
 
     <!--Torque Formula-->
@@ -394,10 +395,13 @@
 
       <h4>Cockpit Layout</h4>
       <p>The cockpit file was created by "Muhamad Mirza Arrafi" on Sketchfab.com. The file was edited to only show the cockpit. The model is a block 60 F-16, so the panel locations may be inaccurate.</p>
-      <p>The data referenced within the cockpit is sourced from a publicized flight manual dating back to 18 April, 2024 using the block 50/52 F-16C/D</p>
-      <a href="https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3">SOURCE HERE (MODEL)</a>
-      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-1%20BMS.pdf">SOURCE HERE (FALCON BMS SYSTEMS)</a>
-      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-34-1-1%20BMS.pdf">SOURCE HERE (FALCON BMS WEAPONS)</a>
+      <p>The data referenced within the cockpit is sourced from a flight simulator game called "Falcon BMS" and the content is community driven. It is based on the F-16C/D block 52. Be aware that both the sources are on Pratt and Whitney engines. Systems may be different.</p>
+      <a href="https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3">SOURCE HERE (MODEL)</a><br>
+      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-1%20BMS.pdf">SOURCE HERE (FALCON BMS SYSTEMS)</a><br>
+      <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-34-1-1%20BMS.pdf">SOURCE HERE (FALCON BMS WEAPONS)</a><br>
+
+      <h4>Zones/Systems page</h4>
+      <p>Nearly all the information in these two pages are source from the Falcon BMS Systems document and the Falcon BMS Weapons document mentioned previously. There were other sources that were not mentioned that were used to clarify specific components or systems (not from official tech data).</p>
 
       <h4>Checklists</h4>
       <p>This is not a replacement for TO's. Checklists are organizational aids and do not replace official inspection procedures. This is used to help confirm that each step was accomplished. No tech data is included in these checklists</p>
@@ -422,6 +426,12 @@
         <br><br>
         Units are irrelevant because this formula scales T<sub>applied</sub>
       </p>
+
+      <h4>Miscellaneous Sources</h4>
+      <a href="https://asmedigitalcollection.asme.org/GT/proceedings-pdf/GT1986/79290/V002T02A001/2396411/v002t02a001-86-gt-1.pdf">JFS Operation</a><br>
+      <a href="https://www.eaton.com/content/dam/eaton/markets/aerospace/eaton-c5-47c-f16-brochure.pdf">Fuel System Components</a><br>
+      <a href="https://www.lockheedmartin.com/content/dam/lockheed-martin/rms/documents/derco-aerospace/Eaton%20Aerospace.pdf">LEF/FFP Clarification</a><br>
+      <a href="https://www.f-16.net/">Many clarificaitons (F-16.net forums)</a>
     </div>
   </body>
 </html>
