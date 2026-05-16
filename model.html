@@ -1,0 +1,737 @@
+<html>
+  <head>
+    <title>Speed Modelling Simple</title>
+  </head>
+  <style>
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 0
+    }
+    #top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      display: inline
+    }
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 50%;
+      height: auto;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      background-color: white;
+      padding: 16px;
+      display: none
+    }
+    #drawCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 99
+    }
+    #placeSettings {
+      display: none
+    }
+    #drawSettings {
+      display: inline
+    }
+     #final {
+       display: none
+     }
+  </style>
+  <body>
+    <!--
+      This entire program is built to only use your keyboard to build. Mouse is only for inspecting
+
+      Shortcuts:
+    -->
+
+    <div id="top">
+      <button onclick="document.getElementById('settings').style.display='block'">Settings</button>
+      <div id="drawSettings">
+        <button onclick="ex()">Extrude</button>
+        <select id="tool">
+          <option>Line</option>
+          <option>3-Point Arc</option>
+        </select>
+      </div>
+      <div id="placeSettings">
+        <button onclick="place()">Place</button>
+      </div>
+      <div id="final">
+        <button onclick="document.getElementById('export').style.display='block'">Export</button>
+      </div>
+    </div>
+    <div class="popup" id="export">
+      <h2>Export</h2>
+      <p>System: <select id="system"></select></p>
+      <p>Component Name: <input type="text" id="name" placeholder="Name"></p>
+      <p>Component Work Unit Code: <input type="text" id="wuc" placeholder="WUC"><br> (for multiple WUCs, seperate by comma)</p>
+      <p>Component Description: <br><textarea rows="5" cols="58" type="text" id="desc" placeholder="Part numbers, component description, R/I TO directory, etc"></textarea></p>
+      <button onclick="exportJSON()">Submit</button><br><br>
+      <textarea id="exportData" rows="8" cols="80" placeholder="EXPORT JSON"></textarea>
+    </div>
+    <div class="popup" id="settings">
+      <h2>Settings</h2>
+      <p>Movement Speed: <input type="number" id="mov"></p>
+      <p>Rotational Speed: <input type="number" id="rota"></p>
+      <p>Scale Speed: PI / <input type="number" id="scEle"></p>
+      <button onclick="saveSettings()">Save</button>
+    </div>
+
+    <canvas id="drawCanvas"></canvas>
+    <canvas id="canvas"></canvas>
+    <script src="./three.js"></script>
+    <script src="./Orbit.js"></script>
+    <script src="./Loader.js"></script>
+    <script>
+      let scene = new THREE.Scene();
+      let c = document.querySelector('#canvas')
+      scene.background = new THREE.Color(0xFFFFFF)
+
+      let camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+      let renderer = new THREE.WebGLRenderer({ antialias: true, canvas: c });
+      renderer.setSize(innerWidth, innerHeight);
+
+      let controls = new THREE.OrbitControls(camera, renderer.domElement);
+      camera.position.set(0, 50, 0)
+
+      let light = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(light);
+
+      let mode = 'edit' // Edit: create the part. Display: place the part on the plane
+      let latched = undefined // Will define a mesh that will be edited with the short cuts
+      let catagories = ['-- Select System --', 'electrical', 'hydraulic', 'pneumatic', 'mechanical', 'airframe', 'fuel', 'weapons', 'enviromental', 'engine', 'safety', 'avionics', 'maintenance']
+      let meshes = new THREE.Group()
+      scene.add(meshes)
+
+      const grid = new THREE.GridHelper(
+        100, // size
+        10,  // divisions
+        0x000000,
+        0x000000
+      );
+
+      grid.rotation.y = Math.PI / 2;
+
+      scene.add(grid);
+
+      let load = new THREE.GLTFLoader()
+      let plane = undefined
+      let canvas = document.querySelector('#drawCanvas')
+      let ctx = canvas.getContext('2d')
+
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+
+      let type = 'line'
+      let points = [] // Arr of objects explaining types of each addition
+      let phase = -1 // -1 meaning not latched to a type
+      let latchHelper = {x: -5, y: -5, size: 5}
+      let rot = 0.01
+      let unit = 0.5
+      let scale = 0.001
+      let expMesh
+      let inExport = false
+      let scal = document.getElementById('scEle')
+      let move = document.getElementById('mov')
+      let rota = document.getElementById('rota')
+      let sys = document.getElementById('system')
+      let latch = {
+        'line': {
+          count: 2
+        },
+        'arc': { // 3 Point arc. EXPORT: [point1 (start), point2 (End point), point3 (arc size)]
+          count: 3
+        }
+      }
+      let m = {
+        x: 0,
+        y: 0
+      }
+      scal.value = scale
+      move.value = unit
+      rota.value = rot
+
+      for(let i = 0; i < catagories.length; i++) {
+        let option = document.createElement('option')
+
+        option.textContent = catagories[i].toUpperCase()
+
+        sys.appendChild(option)
+      }
+
+      load.load('f16.glb', (gltf) => {
+        gltf.scene.children[0].children[0].children[0].children[5].visible = false
+        gltf.scene.children[0].children[0].children[0].children[3].visible = false
+
+        scene.add(gltf.scene)
+
+        gltf.scene.traverse((e) => {
+          if(e.isMesh) {
+            e.material.transparent = true
+            e.material.opacity = 0.7
+          }
+        })
+
+        plane = gltf.scene
+        plane.visible = false
+      })
+
+      function saveSettings() {
+        unit = JSON.parse(move.value)
+        rot = JSON.parse(rota.value)
+        scale = JSON.parse(scEle.value)
+        document.getElementById('settings').style.display = 'none'
+      }
+
+      document.getElementById('tool').addEventListener('change', (e) => {
+        let element = document.getElementById('tool')
+        let convert = ["line", "arc"]
+
+        type = convert[element.selectedIndex]
+      })
+
+      function ex() {
+        let ext = extrude(points)
+        if(ext.success) {
+          document.getElementById('drawSettings').style.display = 'none'
+          document.getElementById('placeSettings').style.display = 'inline-block'
+          canvas.style.display = 'none'
+          ext.geometry.computeBoundingBox();
+
+          const center = new THREE.Vector3();
+
+          ext.geometry.boundingBox.getCenter(center);
+
+          ext.geometry.translate(
+            -center.x,
+            -center.y,
+            -center.z
+          );
+          ext.lines.geometry.translate(
+            -center.x,
+            -center.y,
+            -center.z
+          );
+          ext.mesh.scale.set(0.1, 0.1, 0.1)
+
+          expMesh = ext.mesh
+
+        } else {
+          console.log(ext)
+        }
+      }
+      function exportJSON() {
+        inExport = true
+        expMesh.updateMatrixWorld(true);
+
+        const pos = new THREE.Vector3();
+        const quat = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        const rot = new THREE.Euler();
+
+        expMesh.getWorldPosition(pos);
+        expMesh.getWorldQuaternion(quat);
+        expMesh.getWorldScale(scale);
+
+        rot.setFromQuaternion(quat);
+
+        let json = {
+          cat: document.getElementById('system').value.toUpperCase(),
+          name: document.getElementById('name').value.toUpperCase(),
+          desc: document.getElementById('desc').value,
+          WUC: document.getElementById('wuc').value,
+          modelData: {
+             points,
+             pos: [
+               pos.x,
+               pos.y,
+               pos.z
+             ],
+             scale: [
+               scale.x,
+               scale.y,
+               scale.z
+             ],
+             rot: [
+               rot.x,
+               rot.y,
+               rot.z
+             ]
+           }
+        }
+
+        document.getElementById('exportData').value = JSON.stringify(json, null, 2)
+      }
+      function place() {
+        document.getElementById('placeSettings').style.display = 'none'
+        document.getElementById('final').style.display = 'inline-block'
+
+        plane.visible = true
+        grid.visible = false
+
+        window.onkeydown = function(e) {
+
+          if(inExport) return
+          // Position
+          if(e.key == 'w') {
+            expMesh.position.z += unit
+          } else if(e.key == 's') {
+            expMesh.position.z -= unit
+          } else if(e.key == 'a') {
+            expMesh.position.x += unit
+          } else if(e.key == 'd') {
+            expMesh.position.x -= unit
+          } else if(e.key == 'q') {
+            expMesh.position.y -= unit
+          } else if(e.key == 'e') {
+            expMesh.position.y += unit
+
+            // Scale
+          } else if(e.key == 'z') {
+            expMesh.scale.x += scale
+          } else if(e.key == 'x') {
+            expMesh.scale.x -= scale
+          } else if(e.key == 'c') {
+            expMesh.scale.y += scale
+          } else if(e.key == 'v') {
+            expMesh.scale.y -= scale
+          } else if(e.key == 'b') {
+            expMesh.scale.z += scale
+          } else if(e.key == 'n') {
+            expMesh.scale.z += scale
+
+            // Rotate
+          } else if(e.key == 'r') {
+            const axis = new THREE.Vector3(1, 0, 0);
+
+            expMesh.rotateOnWorldAxis(axis, rot);
+          } else if(e.key == 't') {
+            const axis = new THREE.Vector3(1, 0, 0);
+
+            expMesh.rotateOnWorldAxis(axis, -rot);
+          } else if(e.key == 'y') {
+            const axis = new THREE.Vector3(0, 1, 0);
+
+            expMesh.rotateOnWorldAxis(axis, rot);
+          } else if(e.key == 'u') {
+            const axis = new THREE.Vector3(0, 1, 0);
+
+            expMesh.rotateOnWorldAxis(axis, -rot);
+          } else if(e.key == 'i') {
+            const axis = new THREE.Vector3(0, 0, 1);
+
+            expMesh.rotateOnWorldAxis(axis, rot);
+          } else if(e.key == 'o') {
+            const axis = new THREE.Vector3(0, 0, 1);
+
+            expMesh.rotateOnWorldAxis(axis, -rot);
+          }
+        }
+      }
+
+      function loop() {
+        requestAnimationFrame(loop)
+
+        controls.update()
+
+        renderer.render(scene, camera)
+      }
+      loop()
+
+      function extrude(i) {
+        // Literally no safeguard. What you make is what it tries to extrude
+        try {
+          let item = sortPaths(i)
+          let items = item[0]
+          let shape = new THREE.Shape()
+
+          for(let i = 0; i < items.length; i++) {
+            let curr = items[i]
+
+            if(curr.type == 'line') {
+              shape.moveTo(Math.floor(curr.cords[0].x), Math.floor(curr.cords[0].y));
+              shape.lineTo(Math.floor(curr.cords[1].x), Math.floor(curr.cords[1].y));
+              //shape.closePath();
+            } else if(curr.type == 'arc') {
+              const arc = arcDataFrom3Points(
+               curr.cords[0], // start
+               curr.cords[2], // arc point
+               curr.cords[1]  // end
+             );
+
+             if (!arc) throw new Error("Bad arc");
+
+             shape.moveTo(curr.cords[0].x, curr.cords[0].y);
+
+             shape.absarc(
+               arc.cx,
+               arc.cy,
+               arc.radius,
+               arc.startAngle,
+               arc.endAngle,
+               arc.clockwise
+             );
+            }
+          }
+
+          const geometry = new THREE.ExtrudeGeometry( shape, { depth: 15, steps: 3 } );
+          const material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: false } );
+          const mesh = new THREE.Mesh( geometry, material ) ;
+          mesh.rotation.x = Math.PI / 2
+          scene.add( mesh );
+
+          const edges = new THREE.EdgesGeometry(geometry);
+          const line = new THREE.LineSegments(
+            edges,
+            new THREE.LineBasicMaterial({ color: 0x000000 })
+          );
+
+          mesh.add(line);
+
+          return {
+            success: true,
+            mesh: mesh,
+            geometry: geometry,
+            material: material,
+            lines: line
+          }
+        } catch(err) {
+          console.log(err)
+        }
+      }
+
+      canvas.onmousemove = function(e) {
+        let mouse = {
+          x: e.clientX,
+          y: e.clientY
+        }
+        let found = false
+
+        m = {
+          x: e.clientX,
+          y: e.clientY
+        }
+
+        // Latch Helper
+        for(let i = 0; i < points.length; i++) {
+          if(points[i].finished) {
+            if(points[i].type == 'line') {
+              if(close(mouse, points[i].cords[0])) {
+                // Place circle over point
+                latchHelper.x = points[i].cords[0].x
+                latchHelper.y = points[i].cords[0].y
+                found = true
+              }
+              if(close(mouse, points[i].cords[1])) {
+                // Place circle over point
+                latchHelper.x = points[i].cords[1].x
+                latchHelper.y = points[i].cords[1].y
+                found = true
+              }
+            } else if(points[i].type == 'arc') {
+              if(close(mouse, points[i].cords[0])) {
+                // Place circle over point
+                latchHelper.x = points[i].cords[0].x
+                latchHelper.y = points[i].cords[0].y
+                found = true
+              }
+              if(close(mouse, points[i].cords[1])) {
+                // Place circle over point
+                latchHelper.x = points[i].cords[1].x
+                latchHelper.y = points[i].cords[1].y
+                found = true
+              }
+            }
+          }
+        }
+        if(!found) latchHelper = {x: -5, y: -5, size: 5}
+        update()
+      }
+
+      canvas.onmousedown = function(u) {
+        let e = {
+          clientX: u.clientX,
+          clientY: u.clientY
+        }
+
+        if(latchHelper.x != -5) {
+          e.clientX = latchHelper.x
+          e.clientY = latchHelper.y
+        }
+        if(type == 'line') {
+          if(phase == -1) {
+            phase = 0
+            points.push({type: 'line', finished: false, cords: [{x: e.clientX, y: e.clientY}]})
+          } else if(phase == 0) {
+            phase = -1
+            points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
+            points[points.length - 1].finished = true
+          }
+        } else if(type == 'arc') {
+          if(phase == -1) {
+            phase = 0
+            points.push({type: 'arc', finished: false, cords: [{x: e.clientX, y: e.clientY}]})
+          } else if(phase == 0) {
+            phase = 1
+            points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
+          } else if(phase == 1) {
+            phase = -1
+            points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
+            points[points.length - 1].finished = true
+          }
+        }
+        update()
+      }
+
+      function update() {
+        canvas.width = canvas.width
+
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.lineWidth = 4;
+
+        // Latch helper
+        ctx.beginPath();
+        ctx.arc(latchHelper.x, latchHelper.y, latchHelper.size, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        for(let i = 0; i < points.length; i++) {
+          if(points[i].finished) {
+            if(points[i].type == 'line') {
+              ctx.beginPath();
+              ctx.moveTo(points[i].cords[0].x, points[i].cords[0].y);
+              ctx.lineTo(points[i].cords[1].x, points[i].cords[1].y);
+              ctx.stroke();
+            } else if(points[i].type == 'arc') {
+              draw3PointArc(points[i].cords[0], points[i].cords[2], points[i].cords[1])
+            }
+          } else {
+            if(points[i].type == 'line') {
+              ctx.beginPath();
+              ctx.moveTo(points[i].cords[0].x, points[i].cords[0].y);
+              ctx.lineTo(m.x, m.y);
+              ctx.stroke();
+            } else if(points[i].type == 'arc') {
+              if(points[i].cords.length == 1) {
+                ctx.beginPath();
+                ctx.moveTo(points[i].cords[0].x, points[i].cords[0].y);
+                ctx.lineTo(m.x, m.y);
+                ctx.stroke();
+              } else if(points[i].cords.length == 2) {
+                draw3PointArc(points[i].cords[0], m, points[i].cords[1])
+              }
+            }
+          }
+        }
+      }
+
+      function draw3PointArc(p1, p2, p3) {
+        // Calculate circle center
+        const a = p2.x - p1.x;
+        const b = p2.y - p1.y;
+        const c = p3.x - p1.x;
+        const d = p3.y - p1.y;
+
+        const e = a * (p1.x + p2.x) + b * (p1.y + p2.y);
+        const f = c * (p1.x + p3.x) + d * (p1.y + p3.y);
+
+        const g = 2 * (a * (p3.y - p2.y) - b * (p3.x - p2.x));
+
+        if (g === 0) return; // points are collinear
+
+        const cx = (d * e - b * f) / g;
+        const cy = (a * f - c * e) / g;
+
+        const radius = Math.hypot(p1.x - cx, p1.y - cy);
+
+        const startAngle = Math.atan2(p1.y - cy, p1.x - cx);
+        const midAngle   = Math.atan2(p2.y - cy, p2.x - cx);
+        const endAngle   = Math.atan2(p3.y - cy, p3.x - cx);
+
+        // Determine direction
+        let anticlockwise =
+          ((endAngle - startAngle + Math.PI * 2) % (Math.PI * 2)) <
+          ((midAngle - startAngle + Math.PI * 2) % (Math.PI * 2));
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, startAngle, endAngle, anticlockwise);
+        ctx.stroke();
+
+        return { cx, cy, radius, startAngle, endAngle, anticlockwise }
+      }
+      function close(c1, c2) {
+        return Math.abs(c1.x - c2.x) < 5 && Math.abs(c1.y - c2.y) < 5
+      }
+      function arcDataFrom3Points(p1, p2, p3, eps = 0.00001) {
+        // p1 = start
+        // p2 = arc/middle point
+        // p3 = end
+
+        const a = p2.x - p1.x;
+        const b = p2.y - p1.y;
+        const c = p3.x - p1.x;
+        const d = p3.y - p1.y;
+
+        const e = a * (p1.x + p2.x) + b * (p1.y + p2.y);
+        const f = c * (p1.x + p3.x) + d * (p1.y + p3.y);
+        const g = 2 * (a * (p3.y - p2.y) - b * (p3.x - p2.x));
+
+        if (Math.abs(g) < eps) return null;
+
+        const cx = (d * e - b * f) / g;
+        const cy = (a * f - c * e) / g;
+
+        const radius = Math.hypot(p1.x - cx, p1.y - cy);
+
+        const startAngle = Math.atan2(p1.y - cy, p1.x - cx);
+        const midAngle   = Math.atan2(p2.y - cy, p2.x - cx);
+        const endAngle   = Math.atan2(p3.y - cy, p3.x - cx);
+
+        const twoPi = Math.PI * 2;
+
+        function ccwDelta(from, to) {
+          return (to - from + twoPi) % twoPi;
+        }
+
+        const startToEnd = ccwDelta(startAngle, endAngle);
+        const startToMid = ccwDelta(startAngle, midAngle);
+
+        // If the middle point is on the CCW path from start to end,
+        // then clockwise must be false.
+        // Otherwise, go clockwise.
+        const clockwise = startToMid > startToEnd;
+
+        return {
+          cx,
+          cy,
+          radius,
+          startAngle,
+          midAngle,
+          endAngle,
+          clockwise
+        };
+      }
+
+      function arcPath(start, end, arcPoint) {
+        const arc = arcDataFrom3Points(
+          start,
+          arcPoint,
+          end
+        );
+
+        const path = new THREE.Path();
+
+        path.moveTo(start.x, start.y);
+
+        path.absarc(
+          arc.cx,
+          arc.cy,
+          arc.radius,
+          arc.startAngle,
+          arc.endAngle,
+          arc.clockwise
+        );
+
+        return path;
+      }
+
+      function sortPaths(items, eps = 1) {
+        const unused = [...items];
+        const groups = [];
+
+        function samePoint(a, b) {
+          return (
+            Math.abs(a.x - b.x) <= eps &&
+            Math.abs(a.y - b.y) <= eps
+          );
+        }
+
+        function getStart(item) {
+          return item.cords[0];
+        }
+
+        function getEnd(item) {
+          return item.cords[1];
+        }
+
+        function flipItem(item) {
+          if (item.type === "line") {
+            return {
+              ...item,
+              cords: [item.cords[1], item.cords[0]]
+            };
+          }
+
+          if (item.type === "arc") {
+            return {
+              ...item,
+              cords: [
+                item.cords[1], // new start
+                item.cords[0], // new end
+                item.cords[2]  // arc point stays the same
+              ]
+            };
+          }
+
+          return item;
+        }
+
+        function findConnection(point) {
+          for (let i = 0; i < unused.length; i++) {
+            const item = unused[i];
+
+            if (samePoint(getStart(item), point)) {
+              return {
+                index: i,
+                item,
+                flipped: false
+              };
+            }
+
+            if (samePoint(getEnd(item), point)) {
+              return {
+                index: i,
+                item: flipItem(item),
+                flipped: true
+              };
+            }
+          }
+
+          return null;
+        }
+
+        while (unused.length > 0) {
+          const group = [];
+
+          group.push(unused.shift());
+
+          let searching = true;
+
+          while (searching) {
+            const last = group[group.length - 1];
+            const end = getEnd(last);
+
+            const found = findConnection(end);
+
+            if (found) {
+              group.push(found.item);
+              unused.splice(found.index, 1);
+            } else {
+              searching = false;
+            }
+          }
+
+          groups.push(group);
+        }
+
+        return groups;
+      }
+    </script>
+  </body>
+</html>
