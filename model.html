@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Speed Modelling Simple</title>
+    <title>Speed Modeling Simple</title>
   </head>
   <style>
     #canvas {
@@ -25,7 +25,8 @@
       z-index: 100;
       background-color: white;
       padding: 16px;
-      display: none
+      display: none;
+      border: 2px solid #000000
     }
     #drawCanvas {
       position: fixed;
@@ -81,6 +82,22 @@
       <p>Rotational Speed: <input type="number" id="rota"></p>
       <p>Scale Speed: PI / <input type="number" id="scEle"></p>
       <button onclick="saveSettings()">Save</button>
+    </div>
+
+    <div class="popup" id="adjust">
+      <h2>Adjust Object</h2>
+      <p>Position X: <input type="number" id="moveX"></p>
+      <p>Position Y: <input type="number" id="moveY"></p>
+      <p>Position Z: <input type="number" id="moveZ"></p>
+
+      <p>Rotation X: <input type="number" id="rotX"></p>
+      <p>Rotation Y: <input type="number" id="rotY"></p>
+      <p>Rotation Z: <input type="number" id="rotZ"></p>
+
+      <p>Scale X: <input type="number" id="scX"></p>
+      <p>Scale Y: <input type="number" id="scY"></p>
+      <p>Scale Z: <input type="number" id="scZ"></p>
+      <button onclick="saveAdjust()">Save</button>
     </div>
 
     <canvas id="drawCanvas"></canvas>
@@ -182,6 +199,59 @@
         plane.visible = false
       })
 
+      let raycaster = new THREE.Raycaster()
+      let pointer = new THREE.Vector2()
+      let selectedObj
+
+      function saveAdjust() {
+        if(selectedObj == undefined) {
+          document.getElementById('adjust').style.display = 'none'
+          return
+        }
+
+        selectedObj.position.x = JSON.parse(document.getElementById('moveX').value)
+        selectedObj.position.y = JSON.parse(document.getElementById('moveY').value)
+        selectedObj.position.z = JSON.parse(document.getElementById('moveZ').value)
+
+        selectedObj.rotation.x = JSON.parse(document.getElementById('rotX').value)
+        selectedObj.rotation.y = JSON.parse(document.getElementById('rotY').value)
+        selectedObj.rotation.z = JSON.parse(document.getElementById('rotZ').value)
+
+        selectedObj.scale.x = JSON.parse(document.getElementById('scX').value)
+        selectedObj.scale.y = JSON.parse(document.getElementById('scY').value)
+        selectedObj.scale.z = JSON.parse(document.getElementById('scZ').value)
+
+        document.getElementById('adjust').style.display = 'none'
+      }
+
+      c.addEventListener('mousedown', function(event) {
+        pointer.x = (event.clientX / c.clientWidth) * 2 - 1;
+        pointer.y = -(event.clientY / c.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(pointer, camera);
+
+        const intersects = raycaster.intersectObject(scene, true);
+
+        for(let curr of intersects) {
+          if(curr.object.name == "draw") {
+            selectedObj = curr.object
+            document.getElementById('adjust').style.display = 'block'
+
+            document.getElementById('moveX').value = curr.object.position.x
+            document.getElementById('moveY').value = curr.object.position.y
+            document.getElementById('moveZ').value = curr.object.position.z
+
+            document.getElementById('rotX').value = curr.object.rotation.x
+            document.getElementById('rotY').value = curr.object.rotation.y
+            document.getElementById('rotZ').value = curr.object.rotation.z
+
+            document.getElementById('scX').value = curr.object.scale.x
+            document.getElementById('scY').value = curr.object.scale.y
+            document.getElementById('scZ').value = curr.object.scale.z
+            return
+          }
+        }
+      })
       function saveSettings() {
         unit = JSON.parse(move.value)
         rot = JSON.parse(rota.value)
@@ -384,6 +454,7 @@
           const material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: false } );
           const mesh = new THREE.Mesh( geometry, material ) ;
           mesh.rotation.x = Math.PI / 2
+          mesh.name = 'draw'
           scene.add( mesh );
 
           const edges = new THREE.EdgesGeometry(geometry);
