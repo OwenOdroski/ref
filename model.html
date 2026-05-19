@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Speed Modeling Simple</title>
+    <title>Speed Modelling Simple</title>
   </head>
   <style>
     #canvas {
@@ -43,6 +43,16 @@
      #final {
        display: none
      }
+     button {
+       padding: 8px;
+       background-color: white;
+       border: 2px solid #000000
+     }
+     select {
+       padding: 8px;
+       background-color: white;
+       border: 2px solid #000000
+     }
   </style>
   <body>
     <!--
@@ -52,26 +62,32 @@
     -->
 
     <div id="top">
-      <button onclick="document.getElementById('settings').style.display='block'">Settings</button>
       <div id="drawSettings">
         <button onclick="ex()">Extrude</button>
         <select id="tool">
           <option>Line</option>
           <option>3-Point Arc</option>
         </select>
+        <button onclick="cancel()">Cancel</button>
+        <button onclick="undo()">Undo</button>
+        <button onclick="redo()">Redo</button>
+        <button onclick="pencilMode()" id="pencilMode">Apple Pencil Mode</button>
       </div>
       <div id="placeSettings">
+        <button onclick="document.getElementById('settings').style.display='block'">Settings</button>
         <button onclick="place()">Place</button>
+        <button onclick="newDrawing()">New Drawing</button>
       </div>
       <div id="final">
+        <button onclick="document.getElementById('settings').style.display='block'">Settings</button>
         <button onclick="document.getElementById('export').style.display='block'">Export</button>
       </div>
     </div>
     <div class="popup" id="export">
       <h2>Export</h2>
       <p>System: <select id="system"></select></p>
-      <p>Component Name: <input type="text" id="name" placeholder="Name"></p>
-      <p>Component Work Unit Code: <input type="text" id="wuc" placeholder="WUC"><br> (for multiple WUCs, seperate by comma)</p>
+      <p>TO Reference: <input type="text" id="to" placeholder="TO Reference"></p>
+      <p>Component Work Unit Code: <input type="text" id="WUC" placeholder="WUC"><p id="WUCOut"></p><br> (for multiple WUCs, seperate by comma)</p>
       <p>Component Description: <br><textarea rows="5" cols="58" type="text" id="desc" placeholder="Part numbers, component description, R/I TO directory, etc"></textarea></p>
       <button onclick="exportJSON()">Submit</button><br><br>
       <textarea id="exportData" rows="8" cols="80" placeholder="EXPORT JSON"></textarea>
@@ -122,7 +138,7 @@
 
       let mode = 'edit' // Edit: create the part. Display: place the part on the plane
       let latched = undefined // Will define a mesh that will be edited with the short cuts
-      let catagories = ['-- Select System --', 'electrical', 'hydraulic', 'pneumatic', 'mechanical', 'airframe', 'fuel', 'weapons', 'enviromental', 'engine', 'safety', 'avionics', 'maintenance']
+      let catagories = ['-- Select System --', 'electrical', 'hydraulic', 'pneumatic', 'mechanical', 'airframe', 'fuel transfer', 'fuel distribution', 'weapons', 'enviromental', 'engine', 'safety', 'avionics', 'maintenance']
       let meshes = new THREE.Group()
       scene.add(meshes)
 
@@ -146,9 +162,10 @@
       canvas.height = window.innerHeight
 
       let type = 'line'
+      let history = []
       let points = [] // Arr of objects explaining types of each addition
       let phase = -1 // -1 meaning not latched to a type
-      let latchHelper = {x: -5, y: -5, size: 5}
+      let latchHelper = {x: -5, y: -5, size: 10}
       let rot = 0.01
       let unit = 0.5
       let scale = 0.001
@@ -158,6 +175,8 @@
       let move = document.getElementById('mov')
       let rota = document.getElementById('rota')
       let sys = document.getElementById('system')
+      let pencil = false
+      let WUC = [] // Work Unit Codes for naming verification
       let latch = {
         'line': {
           count: 2
@@ -173,6 +192,43 @@
       scal.value = scale
       move.value = unit
       rota.value = rot
+
+      async function getWUC() {
+        const url = "/db.json";
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          WUC = result.WUC
+        } catch (error) {
+          console.error(error.message);
+        }
+      }
+      getWUC()
+
+      let WUCFill = document.getElementById('WUC')
+      let WUCOut = document.getElementById('WUCOut')
+
+      WUCFill.addEventListener('keydown', function(e) {
+        let length = WUCFill.value.length
+        let code = WUCFill.value + e.key
+
+        if(length == 4) {
+          for(let i = 0; i < WUC.length; i++) {
+            if(WUC[i].code.toUpperCase() == code.toUpperCase()) {
+              WUCOut.innerHTML = WUC[i].desc + " <br>(" + WUC[i].system + ")"
+            }
+          }
+          if(WUCOut.textContent == '') {
+            WUCOut.textContent = 'WUC not found'
+          }
+        } else {
+          WUCOut.innerHTML = ''
+        }
+      })
 
       for(let i = 0; i < catagories.length; i++) {
         let option = document.createElement('option')
@@ -203,6 +259,28 @@
       let pointer = new THREE.Vector2()
       let selectedObj
 
+      function pencilMode() {
+        if(pencil) {
+          pencil = false
+          document.getElementById('pencilMode').style.backgroundColor = "#FFFFFF"
+          document.getElementById('pencilMode').style.color = "#000000"
+        } else if(!pencil) {
+          pencil = true
+          document.getElementById('pencilMode').style.backgroundColor = "#000000"
+          document.getElementById('pencilMode').style.color = "#FFFFFF"
+        }
+      }
+      function newDrawing() {
+        camera.position.set(0, 50, 0)
+        controls.update()
+        history = []
+        points = []
+        document.getElementById('placeSettings').style.display = 'none'
+        document.getElementById('drawSettings').style.display = 'block'
+        canvas.style.display = 'block'
+        update()
+      }
+
       function saveAdjust() {
         if(selectedObj == undefined) {
           document.getElementById('adjust').style.display = 'none'
@@ -213,15 +291,22 @@
         selectedObj.position.y = JSON.parse(document.getElementById('moveY').value)
         selectedObj.position.z = JSON.parse(document.getElementById('moveZ').value)
 
-        selectedObj.rotation.x = JSON.parse(document.getElementById('rotX').value)
-        selectedObj.rotation.y = JSON.parse(document.getElementById('rotY').value)
-        selectedObj.rotation.z = JSON.parse(document.getElementById('rotZ').value)
+        selectedObj.rotation.x = degToRad(JSON.parse(document.getElementById('rotX').value))
+        selectedObj.rotation.y = degToRad(JSON.parse(document.getElementById('rotY').value))
+        selectedObj.rotation.z = degToRad(JSON.parse(document.getElementById('rotZ').value))
 
         selectedObj.scale.x = JSON.parse(document.getElementById('scX').value)
         selectedObj.scale.y = JSON.parse(document.getElementById('scY').value)
         selectedObj.scale.z = JSON.parse(document.getElementById('scZ').value)
 
         document.getElementById('adjust').style.display = 'none'
+      }
+
+      function radToDeg(rad) {
+        return rad * (180 / Math.PI)
+      }
+      function degToRad(deg) {
+        return deg * (Math.PI / 180)
       }
 
       c.addEventListener('mousedown', function(event) {
@@ -241,9 +326,9 @@
             document.getElementById('moveY').value = curr.object.position.y
             document.getElementById('moveZ').value = curr.object.position.z
 
-            document.getElementById('rotX').value = curr.object.rotation.x
-            document.getElementById('rotY').value = curr.object.rotation.y
-            document.getElementById('rotZ').value = curr.object.rotation.z
+            document.getElementById('rotX').value = radToDeg(curr.object.rotation.x)
+            document.getElementById('rotY').value = radToDeg(curr.object.rotation.y)
+            document.getElementById('rotZ').value = radToDeg(curr.object.rotation.z)
 
             document.getElementById('scX').value = curr.object.scale.x
             document.getElementById('scY').value = curr.object.scale.y
@@ -252,6 +337,26 @@
           }
         }
       })
+      function cancel() {
+        for(let i in points) {
+          if(!points[i].finished) {
+            points.splice(i, 1);
+            break
+          }
+        }
+        update()
+      }
+
+      function undo() {
+        history.push(points[points.length - 1])
+        points.splice(points.length - 1, 1);
+        update()
+      }
+      function redo() {
+        points.push(history[history.length - 1])
+        history.splice(history.length - 1, 1);
+        update()
+      }
       function saveSettings() {
         unit = JSON.parse(move.value)
         rot = JSON.parse(rota.value)
@@ -266,7 +371,23 @@
         type = convert[element.selectedIndex]
       })
 
+      function findOffset(offset) {
+        return {
+          x: offset.x - (canvas.width / 2),
+          y: offset.y - (canvas.height / 2),
+          z: 0
+        }
+      }
+
       function ex() {
+        let h = prompt("Extrude Height: ")
+        let height
+        try {
+          height = JSON.parse(h)
+        } catch(err) {
+          alert('Not a number')
+          return
+        }
         let ext = extrude(points)
         if(ext.success) {
           document.getElementById('drawSettings').style.display = 'none'
@@ -275,29 +396,36 @@
           ext.geometry.computeBoundingBox();
 
           const center = new THREE.Vector3();
-
           ext.geometry.boundingBox.getCenter(center);
 
+          const offset = findOffset(center)
+
           ext.geometry.translate(
-            -center.x,
-            -center.y,
-            -center.z
+            -center.x + offset.x,
+            -center.y + offset.y,
+            -center.z + offset.z
           );
           ext.lines.geometry.translate(
-            -center.x,
-            -center.y,
-            -center.z
+            -center.x + offset.x,
+            -center.y + offset.y,
+            -center.z + offset.z
           );
-          ext.mesh.scale.set(0.1, 0.1, 0.1)
+          ext.mesh.position.y = height / 2
+          ext.mesh.scale.set(0.1, 0.1, height)
 
           expMesh = ext.mesh
 
         } else {
-          console.log(ext)
+          alert(JSON.stringify(ext.errors))
         }
       }
+      function r(n, p = 1000) {
+        return Math.round(n * p) / p;
+      }
+
       function exportJSON() {
-        inExport = true
+        inExport = true;
+
         expMesh.updateMatrixWorld(true);
 
         const pos = new THREE.Vector3();
@@ -311,32 +439,99 @@
 
         rot.setFromQuaternion(quat);
 
-        let json = {
-          cat: document.getElementById('system').value.toUpperCase(),
-          name: document.getElementById('name').value.toUpperCase(),
-          desc: document.getElementById('desc').value,
-          WUC: document.getElementById('wuc').value,
-          modelData: {
-             points,
-             pos: [
-               pos.x,
-               pos.y,
-               pos.z
-             ],
-             scale: [
-               scale.x,
-               scale.y,
-               scale.z
-             ],
-             rot: [
-               rot.x,
-               rot.y,
-               rot.z
-             ]
-           }
+        const geo = expMesh.geometry;
+
+        let vertices = [];
+        let faces = [];
+
+        // OLD THREE.Geometry
+        if(geo.vertices && geo.faces) {
+
+          for(let v of geo.vertices) {
+            vertices.push([
+              r(v.x),
+              r(v.y),
+              r(v.z)
+            ]);
+          }
+
+          for(let f of geo.faces) {
+            faces.push([
+              f.a,
+              f.b,
+              f.c
+            ]);
+          }
+
+        } else {
+
+          // BUFFER GEOMETRY SUPPORT
+          const posAttr = geo.attributes.position.array;
+
+          for(let i = 0; i < posAttr.length; i += 3) {
+            vertices.push([
+              r(posAttr[i]),
+              r(posAttr[i + 1]),
+              r(posAttr[i + 2])
+            ]);
+          }
+
+          // Indexed geometry
+          if(geo.index) {
+
+            const idx = geo.index.array;
+
+            for(let i = 0; i < idx.length; i += 3) {
+              faces.push([
+                idx[i],
+                idx[i + 1],
+                idx[i + 2]
+              ]);
+            }
+
+          } else {
+
+            // Non-indexed geometry
+            for(let i = 0; i < vertices.length; i += 3) {
+              faces.push([
+                i,
+                i + 1,
+                i + 2
+              ]);
+            }
+
+          }
         }
 
-        document.getElementById('exportData').value = JSON.stringify(json, null, 2)
+        const json = {
+          to: document.getElementById('to').value,
+          desc: document.getElementById('desc').value,
+          WUC: document.getElementById('WUC').value,
+          modelData: {
+            vertices: vertices,
+            faces: faces,
+            transform: {
+              pos: [
+                r(pos.x),
+                r(pos.y),
+                r(pos.z)
+              ],
+              rot: [
+                r(rot.x),
+                r(rot.y),
+                r(rot.z)
+              ],
+              scale: [
+                r(scale.x),
+                r(scale.y),
+                r(scale.z)
+              ]
+            }
+          }
+        };
+
+        document.getElementById('exportData').value =
+          JSON.stringify(json, null, 2);
       }
       function place() {
         document.getElementById('placeSettings').style.display = 'none'
@@ -414,7 +609,7 @@
       }
       loop()
 
-      function extrude(i) {
+      function extrude(i, h) {
         // Literally no safeguard. What you make is what it tries to extrude
         try {
           let item = sortPaths(i)
@@ -450,7 +645,7 @@
             }
           }
 
-          const geometry = new THREE.ExtrudeGeometry( shape, { depth: 15, steps: 3 } );
+          const geometry = new THREE.ExtrudeGeometry( shape, { depth: 1, bevelEnabled: false } );
           const material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: false } );
           const mesh = new THREE.Mesh( geometry, material ) ;
           mesh.rotation.x = Math.PI / 2
@@ -473,7 +668,7 @@
             lines: line
           }
         } catch(err) {
-          console.log(err)
+          alert(err)
         }
       }
 
@@ -521,7 +716,7 @@
             }
           }
         }
-        if(!found) latchHelper = {x: -5, y: -5, size: 5}
+        if(!found) latchHelper = {x: -5, y: -5, size: 10}
         update()
       }
 
@@ -540,9 +735,12 @@
             phase = 0
             points.push({type: 'line', finished: false, cords: [{x: e.clientX, y: e.clientY}]})
           } else if(phase == 0) {
-            phase = -1
-            points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
-            points[points.length - 1].finished = true
+            if(!pencil) {
+              phase = -1
+              points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
+              points[points.length - 1].finished = true
+              history = []
+            }
           }
         } else if(type == 'arc') {
           if(phase == -1) {
@@ -555,9 +753,21 @@
             phase = -1
             points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
             points[points.length - 1].finished = true
+            history = []
           }
         }
         update()
+      }
+      canvas.onmouseup = function(e) {
+        if(pencil) {
+          // Only really affects line
+          if(phase == 0 && type == 'line') {
+           phase = -1
+           points[points.length - 1].cords.push({x: e.clientX, y: e.clientY})
+           points[points.length - 1].finished = true
+           history = []
+         }
+        }
       }
 
       function update() {
@@ -637,7 +847,7 @@
         return { cx, cy, radius, startAngle, endAngle, anticlockwise }
       }
       function close(c1, c2) {
-        return Math.abs(c1.x - c2.x) < 5 && Math.abs(c1.y - c2.y) < 5
+        return Math.abs(c1.x - c2.x) < 10 && Math.abs(c1.y - c2.y) < 10
       }
       function arcDataFrom3Points(p1, p2, p3, eps = 0.00001) {
         // p1 = start
