@@ -191,7 +191,7 @@ async function checkJSON() {
       const user = data.get("username")
       const key = data.get("password")
 
-      if(user.toUpperCase() == "BAKER2026") {
+      if(user.toUpperCase() == "CBAKER2026") {
         alert('cunt')
       }
 
