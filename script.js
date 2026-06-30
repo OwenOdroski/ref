@@ -194,6 +194,7 @@ async function checkJSON() {
       if(user.toUpperCase() == "CBAKER2026") {
         alert('cunt')
       }
+      alert(user)
 
       window.setTimeout(async function() {
         const text = await file.text();   // Read file as string
