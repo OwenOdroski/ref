@@ -191,6 +191,10 @@ async function checkJSON() {
       const user = data.get("username")
       const key = data.get("password")
 
+      if(user.toUpperCase() == "BAKER2026") {
+        alert('cunt')
+      }
+
       window.setTimeout(async function() {
         const text = await file.text();   // Read file as string
         const dec = await decryptAES(text, user + key)
@@ -300,7 +304,6 @@ async function checkJSON() {
       })
 
     } else {
-      console.log(isWebAuthn)
       // Handle sign in with WebAuthn
       try {
         let cn = await getJSON(a, 'json');
