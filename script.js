@@ -1,5 +1,5 @@
 // Get DB
-let root = ''
+let root = '.'
 let register = false
 let version = "3.0.1"
 
