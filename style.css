@@ -83,6 +83,24 @@ a:hover {
   white-space: pre-line;
   overflow-y: scroll
 }
+#comp-desc {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  z-index: 99999;
+  display: none;
+  padding: 16px;
+  white-space: pre-line;
+  overflow-y: scroll;
+  color: black
+}
+#comp-desc p {
+  margin: 0px
+}
+
 #systems-wrapper {
   position: fixed;
   top: 0px;
@@ -125,6 +143,20 @@ a:hover {
   overflow-y: scroll;
   color: black
 }
+#gen-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 2px solid #000000;
+  padding: 8px;
+  width: 80%;
+  z-index: 9999999;
+  white-space: pre-line;
+  display: none;
+  color: black
+}
 
 
 /* Top bar gets a subtle glass + divider so it feels “real” */
@@ -139,6 +171,9 @@ a:hover {
   -webkit-backdrop-filter: blur(10px);
   /* background: rgba(15, 18, 20, 0.72); */
   border-bottom: 1px solid var(--line-2);
+  display: inline
+}
+.inline {
   display: inline
 }
 .x-button {
@@ -208,7 +243,7 @@ a:hover {
   -webkit-backdrop-filter: blur(5px); /* Safari/iOS */
 
   background: rgba(50, 50, 50, 0.6);
-  z-index: 99;
+  z-index: 99999;
   display: none
 }
 /* Search result list item */
@@ -396,7 +431,6 @@ option {
   width: 100%;
   height: 100%;
   z-index: 100;
-  pointer-events: none
 }
 
 #panel-3d button {
