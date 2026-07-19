@@ -1,7 +1,7 @@
 // Get DB
-let root = '/ref'
+let root = ''
 let register = false
-let version = "2.2.0"
+let version = "3.0.1"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -40,10 +40,10 @@ let refDes
 let devCockpit = []
 let panelDesc
 let phone
-let zonesEnc
 let userNotes
 let DB
 let systems
+let components
 let allowContolsUpdate = true
 
 window.addEventListener("load", () => {
@@ -159,7 +159,7 @@ async function checkJSON() {
   DB = a
 
   if(!u) {
-    saveJSON(a, 'user', JSON.stringify({zones: {}, panelData: {}, notes: {}}))
+    saveJSON(a, 'user', JSON.stringify({panelData: {}, notes: {}}))
   } else {
     let g = await getJSON(a, 'user')
     userNotes = JSON.parse(g)
@@ -190,10 +190,6 @@ async function checkJSON() {
       const data = new FormData(form)
       const user = data.get("username")
       const key = data.get("password")
-
-      if(user.toUpperCase() == "CBAKER2026") {
-        alert('cunt')
-      }
 
       window.setTimeout(async function() {
         const text = await file.text();   // Read file as string
@@ -345,14 +341,44 @@ async function loadPage(db, isWebAuthn) {
     cockPanels = data.cpPanels
     panelDesc = data.panelData
     phone = data.phone
-    zonesEnc = data.zones
     systems = data.ops
+    components = data.components
 
     document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
 
     if(data.version != version) {
       document.getElementById('updateNotice').style.display = 'block'
-      document.getElementById('ud-text').innerHTML = data.version + ' → ' + version
+
+      let splitENC = data.version.split('.')
+      let splitV = version.split('.')
+      let title = document.getElementById('ud-title')
+      let body = document.getElementById('ud-text')
+
+      //' → '
+
+      if(splitENC[0] > splitV[0]) {
+        title.textContent = 'An updated app is available'
+        body.textContent = version + ' → ' + data.version
+      } else if(splitENC[0] < splitV[0]) {
+        title.textContent = 'An updated .ENC file is available'
+        body.textContent = data.version + ' → ' + version
+      } else {
+        if(splitENC[1] > splitV[1]) {
+          title.textContent = 'An updated app is available'
+          body.textContent = version + ' → ' + data.version
+        } else if(splitENC[1] < splitV[1]) {
+          title.textContent = 'An updated .ENC file is available'
+          body.textContent = data.version + ' → ' + version
+        } else {
+          if(splitENC[2] > splitV[2]) {
+            title.textContent = 'An updated app is available'
+            body.textContent = version + ' → ' + data.version
+          } else if(splitENC[2] < splitV[2]) {
+            title.textContent = 'An updated .ENC file is available'
+            body.textContent = data.version + ' → ' + version
+          }
+        }
+      }
     }
 
     document.querySelectorAll('.tohide').forEach(el => {
@@ -361,7 +387,6 @@ async function loadPage(db, isWebAuthn) {
 
     if(wuc == undefined) document.getElementById('WUCwrapper').style.display = 'none'
     if(refDes == undefined) document.getElementById('refDesWrapper').style.display = 'none'
-    if(zonesEnc == undefined) document.getElementById('hide-mode').style.display = 'none'
 
     let ch = document.getElementById('ch')
 
@@ -448,7 +473,7 @@ function searchTO() {
   });
 }
 
-var scene, camera, renderer, controls, mesh, group, light, group2, stations, zones
+var scene, camera, renderer, controls, mesh, group, light, group2, stations
 
 // Panel Lookup
 let panels = allPanels
@@ -468,6 +493,7 @@ function startPanelScreen() {
   let w = document.getElementById('loader-wrapper')
   let s = document.getElementById('loader-status')
   let mode3 = 0
+  let planeOpacity = 1
   c2.style.display = 'block'
   canvas.style.display = 'block'
   w.style.display = 'block'
@@ -478,7 +504,6 @@ function startPanelScreen() {
     scene.background = new THREE.Color(0xFFFFFF)
     camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true, canvas: c });
-    document.body.appendChild(renderer.domElement);
     renderer.setSize(innerWidth, innerHeight);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -489,7 +514,7 @@ function startPanelScreen() {
     group = new THREE.Group()
     group2 = new THREE.Group()
     stations = new THREE.Group()
-    zones = new THREE.Group()
+    comp = new THREE.Group()
 
     let positions = [ // Name, pos, rot
       ["9", new THREE.Vector3(5, 0, 47), 0],
@@ -506,25 +531,47 @@ function startPanelScreen() {
       ["3", new THREE.Vector3(5, -3, -30), 0],
       ["4", new THREE.Vector3(5, -3, -18), 0],
     ]
-    let zoneData = [ // ID, positions, size, color. (ID will be a three digit number. Odd for left/lower even for right/upper. zero for middle (second num). First will start at 1 (front) and bigger for tail)
-      ["102", new THREE.Vector3(77, 5, 0), new THREE.Vector3(51, 17, 20), 0x0000FF], // Radome/cockpit
-      ["202", new THREE.Vector3(39, 5, 0), new THREE.Vector3(25, 17, 13), 0x00FFFF], // PDU
-      ["222", new THREE.Vector3(39, 2, 10), new THREE.Vector3(25, 7, 8), 0xFF00FF], // EPU
-      ["212", new THREE.Vector3(39, 2, -10), new THREE.Vector3(25, 7, 8), 0xFF0000], // GUN
-      ["302", new THREE.Vector3(25, 2, 0), new THREE.Vector3(5, 30, 30), 0x6B8E23], // Hydro
-      ["402", new THREE.Vector3(-5, 5, 0), new THREE.Vector3(55, 5, 15), 0xFF00FF], // FUEL/AR
-      ["510", new THREE.Vector3(-20, 0, -9), new THREE.Vector3(46, 8, 4), 0xFF7F00], // Left Strake
-      ["520", new THREE.Vector3(-20, 0, 9), new THREE.Vector3(46, 8, 4), 0x7FFF00], // Right Strake
-      ["201", new THREE.Vector3(40, -10, 0), new THREE.Vector3(25, 18, 17), 0xBA55D3], // Nose/Regen
-      ["411", new THREE.Vector3(13, -10, -7), new THREE.Vector3(18, 19, 12), 0x8B4513], // Left MLG
-      ["421", new THREE.Vector3(13, -10, 7), new THREE.Vector3(18, 19, 12), 0x4B0082], // Left MLG
-      ["501", new THREE.Vector3(-10, -8, 0), new THREE.Vector3(30, 8, 14), 0xDC143C], // ADG/Eng driven/Arresting hook
-      ["440", new THREE.Vector3(8, 1, 30), new THREE.Vector3(40, 5, 40), 0xFFD700], // Left wing
-      ["440", new THREE.Vector3(8, 1, -30), new THREE.Vector3(40, 5, 40), 0xFFD700], // Right wing
-      ["604", new THREE.Vector3(-23, 20, 0), new THREE.Vector3(55, 25, 5), 0x00FF7F], // Dorsal fairing/tail
-    ]
 
     const loader = new THREE.GLTFLoader();
+
+    for(let i in components) {
+      const geometry = new THREE.Geometry();
+      const modelData = components[i].modelData
+
+      for(let v of modelData.vertices) {
+        geometry.vertices.push(
+          new THREE.Vector3(v[0], v[1], v[2])
+        );
+      }
+
+      for(let f of modelData.faces) {
+        geometry.faces.push(
+          new THREE.Face3(f[0], f[1], f[2])
+        );
+      }
+
+      geometry.computeFaceNormals();
+      geometry.computeVertexNormals();
+
+      const mesh = new THREE.Mesh(
+        geometry,
+        new THREE.MeshBasicMaterial({
+          color: 0x00ff00
+        })
+      );
+
+      mesh.name = "x" + i;
+
+      const t = modelData.transform;
+
+      mesh.position.set(t.pos[0], t.pos[1], t.pos[2]);
+      mesh.rotation.set(t.rot[0], t.rot[1], t.rot[2]);
+      mesh.scale.set(t.scale[0], t.scale[1], t.scale[2]);
+
+      comp.add(mesh)
+    }
+    comp.visible = false
+    scene.add(comp)
 
     loader.load(root + '/cockpit.glb', (gltf) => {
       gltf.scene.position.set(0, -20, 200)
@@ -566,33 +613,41 @@ function startPanelScreen() {
       scene.add(stations)
       stations.visible = false
 
-      for(let i in zoneData) {
-        let pos = zoneData[i][1]
-        let size = zoneData[i][2]
-
-        let mesh = new THREE.Mesh(
-          new THREE.BoxGeometry(size.x, size.y, size.z),
-          new THREE.MeshBasicMaterial({color: zoneData[i][3], transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false})
-        )
-
-        mesh.position.copy(pos)
-        mesh.name = zoneData[i][0]
-        zones.add(mesh)
-      }
-      scene.add(zones)
-      zones.visible = false
-
       let select = document.getElementById('selectors')
       let mode3d = 2
 
+      function makeOpaque(mesh, val) {
+        mesh.traverse((e) => {
+          if(e.isMesh) {
+            e.material.transparent = val != 1;
+            e.material.opacity = val;
+            e.material.depthWrite = true;
+            e.material.depthTest = true;
+            e.material.side = THREE.FrontSide;
+          }
+        })
+      }
+
       select.addEventListener('change', (e) => {
-        const convert = ["check", "check2", "check3"]
-        const vis = [stations, zones, group]
+        const convert = ["check", "check3", "check4"]
+        const vis = [stations, group, comp]
 
         convert.forEach((e, i) => {
           let cb = document.getElementById(convert[i])
           vis[i].visible = cb.checked
           if(cb.checked) mode3d = i
+
+          if(cb.checked && i == 2) {
+            makeOpaque(mesh, 0.7)
+            comp.visible = true
+            document.getElementById('comp-search').style.display = 'block'
+            document.getElementById('searchBarPanels').style.display = 'none'
+          } else {
+            makeOpaque(mesh, 1)
+            comp.visible = false
+            document.getElementById('comp-search').style.display = 'none'
+            document.getElementById('searchBarPanels').style.display = 'block'
+          }
         });
       })
 
@@ -611,8 +666,8 @@ function startPanelScreen() {
           gltf.scene.visible = true
           group.visible = false
           stations.visible = false
-          zones.visible = false
           group2.visible = true
+          comp.visible = false
         } else {
           camera.position.set(100, 60, 100)
           controls.target.set(0, 0, 0)
@@ -625,8 +680,8 @@ function startPanelScreen() {
           gltf.scene.visible = false
 
           if(mode3d == 2) group.visible = true
-          if(mode3d == 1) zones.visible = true
           if(mode3d == 0) stations.visible = true
+          if(mode3d == 3) comp.visible = true
           group2.visible = false
         }
       }
@@ -638,7 +693,8 @@ function startPanelScreen() {
       }
     },
     (error) => {
-      alert('Error loading 3D model');
+      console.log(error)
+      alert('Error loading 3D cockpit model');
     })
 
 
@@ -668,7 +724,8 @@ function startPanelScreen() {
       }
     },
     (error) => {
-      alert('Error loading 3D model');
+      console.log(error)
+      alert('Error loading 3D aircraft model');
     });
 
     // Load past points from localStorage
@@ -775,7 +832,10 @@ function startPanelScreen() {
           if(group.visible) {
             if(intersects.length > 0) {
               let panel = allPanels[intersects[0].object.name]
-              alert(panel.type + ' Number: ' + panel.number)
+              document.getElementById('gen-popup').style.display = "block"
+              document.getElementById('blur-back').style.display = "block"
+              document.getElementById('gen-data').textContent = panel.type + ' Number: ' + panel.number
+              // Include TO Reference
             }
           }
           if(stations.visible) {
@@ -785,78 +845,96 @@ function startPanelScreen() {
               alert("STATION NUMBER: " + name)
             }
           }
-          if(zones.visible) {
-            intersects = raycaster.intersectObject(zones, true);
-            if(intersects.length > 0) {
-              let name = intersects[0].object.name
-              let data = [...zonesEnc[name]]
-              let desc = document.getElementById('zone-body')
+          if(comp.visible) {
+            let objects = raycaster.intersectObject(comp, true)
 
-              if(zonesEnc == undefined) {
-                alert('Update .ENC file to obtain access')
+            if(objects.length !== 0 && objects[0].object.name[0] == "x") {
+              let index = objects[0].object.name.slice(1)
+              let data = components[index]
+              let nomen = document.getElementById('comp-nomen') // From WUC
+              let system = document.getElementById('comp-system')
+              let WUC = document.getElementById('comp-wuc')
+              let to = document.getElementById('comp-to')
+              let pn = document.getElementById('comp-pn')
+              let desc = document.getElementById('comp-descript')
+              let related = document.getElementById('comp-related')
+
+              document.getElementById('comp-desc').style.display = 'block'
+
+              to.textContent = data.to
+              desc.textContent = data.desc
+
+              if(!data.desc) {
+                desc.textContent = 'No description'
               }
 
-              let note = document.getElementById('zone-note')
+              if(data.section == undefined || data.section == "-- Select System --") {
+                system.textContent = "General"
+              } else {
+                system.textContent = data.section
+              }
 
-              document.getElementById('note-box').value = ''
-              document.getElementById('zone-desc').style.display = 'block'
-              document.getElementById('zone-ident').textContent = "Zone Number: " + name
+              if(data.pn == '' || data.pn == undefined) {
+                pn.textContent = "Not Found"
+              } else {
+                pn.textContent = data.pn
+              }
 
-              let retry = () => {
-                desc.innerHTML = ''
-
-                if(userNotes.zones[name] != undefined && userNotes.zones[name] != '') {
-                  data.push({type: "tab", name: "notes", data: userNotes.zones[name]})
-                }
-
-                for(let i in data) {
-                  if(data[i].type == 'tab') {
-                    let d = document.createElement('details')
-                    let s = document.createElement('summary')
-                    let p = document.createElement('p')
-
-                    s.textContent = data[i].name.toUpperCase()
-                    p.textContent = data[i].data.replace(/\n/g, "\n\n")
-
-                    s.style = 'color: black; font-size: 25px'
-                    p.style = "color: black"
-
-                    d.appendChild(s)
-                    d.appendChild(p)
-                    desc.appendChild(d)
-                  } else {
-                    document.getElementById('zoneName').textContent = data[i].name
-                    document.getElementById('zoneDesc').textContent = data[i].data
-                  }
+              for(let i in wuc) {
+                if(wuc[i].code.includes(data.WUC)) {
+                  nomen.textContent = wuc[i].desc + "\n" + wuc[i].system
+                  WUC.textContent = data.WUC
+                  break
                 }
               }
-              retry()
-              note.onclick = function() {
-                document.getElementById('note-wrapper').style.display = 'block'
 
-                if(userNotes.zones[name] != undefined) {
-                  document.getElementById('note-box').value = userNotes.zones[name]
+              // Related Comps
+              related.innerHTML = "<br>"
+              for(let x = 0; x < data.related.length; x++) {
+                let curr = data.related[x]
+                let option = document.createElement('details')
+                let summary = document.createElement('summary')
+                let nomen = document.createElement('p')
+                let to = document.createElement('p')
+                let wuc = document.createElement('p')
+                let pNum = document.createElement('p')
+                let desc = document.createElement('p')
+
+                let makeLabel = (name, element) => {
+                  let strong = document.createElement('strong')
+                  strong.textContent = name
+
+                  element.prepend(document.createElement('br'))
+                  element.prepend(strong)
+                  element.prepend(document.createElement('br'))
+                  option.appendChild(element)
                 }
 
-                document.getElementById('save-note').onclick = () => {
-                  let val = document.getElementById('note-box')
+                summary.textContent = curr.nomen
+                nomen.textContent = curr.nomen
+                to.textContent = curr.ref
+                wuc.textContent = curr.wuc
+                pNum.textContent = curr.pNum
+                desc.textContent = curr.desc
 
-                  if(userNotes.zones != undefined) {
-                    userNotes.zones[name] = val.value
-                    saveJSON(DB, 'user', JSON.stringify(userNotes))
-                    document.getElementById('note-wrapper').style.display = 'none'
+                option.style = "padding-left: 16px"
 
-                    if(data[data.length - 1].name == 'notes') {
-                      data.pop()
-                    }
-
-                    retry()
-                  }
+                if(!curr.desc) {
+                  desc.textContent = "No description"
                 }
+
+                option.appendChild(summary)
+
+                makeLabel("Nomenclature", nomen)
+                makeLabel("TO Reference", to)
+                makeLabel("WUC", wuc)
+                makeLabel("Part Number", pNum)
+                makeLabel("Description", desc)
+                related.appendChild(option)
               }
             }
           }
-        } else {
+        } else  {
           let intersects = raycaster.intersectObject(group2, true);
 
           if(intersects.length > 0) {
@@ -1052,102 +1130,114 @@ function searchRefDes() {
   }
 }
 
+function addHighlighted(parent, value, input) {
+  const text = String(value || "");
+  const lower = text.toLowerCase();
+  const search = input.toLowerCase();
+
+  if(!search || !lower.includes(search)) {
+    parent.textContent = text.toUpperCase();
+    return;
+  }
+
+  let i = 0;
+
+  while(i < text.length) {
+    const found = lower.indexOf(search, i);
+
+    if(found === -1) {
+      parent.appendChild(
+        document.createTextNode(text.slice(i).toUpperCase())
+      );
+      break;
+    }
+
+    parent.appendChild(
+      document.createTextNode(text.slice(i, found).toUpperCase())
+    );
+
+    const mark = document.createElement("span");
+    mark.textContent = text.slice(found, found + search.length).toUpperCase();
+    mark.style.backgroundColor = "#918a3f";
+    mark.style.padding = "4px";
+    mark.style.borderRadius = "5px";
+
+    parent.appendChild(mark);
+
+    i = found + search.length;
+  }
+}
+
 function searchWUC() {
-  const input = document.getElementById("searchWUC").value.toLowerCase();
+  const input = document.getElementById("searchWUC").value.trim().toLowerCase();
   const resultsDiv = document.getElementById("wuc-search-res");
-  resultsDiv.innerHTML = ''
-  let html = "";
-  let count = 0;
-  const MAX_RESULTS = 75; // prevents DOM overload
 
-  for (let i = 0; i < wuc.length; i++) {
-    const item = wuc[i];
+  resultsDiv.innerHTML = "";
 
-    // Search across all fields
-    if (item.code.toLowerCase().includes(input) || item.desc.toLowerCase().includes(input) || item.system.toLowerCase().includes(input)) {
-      let div = document.createElement("div");
+  if(input.length === 0) {
+    const defaults = wuc.slice(0, 15);
 
-      let strong = document.createElement("strong");
+    for(const item of defaults) {
+      const div = document.createElement("div");
 
-      if(item.code.toLowerCase().includes(input) && input.length > 0) {
-        let sp = splitWithChunk(item.code, input)
-
-        for(let i in sp) {
-          if(sp[i] == input) {
-            let ele = document.createElement('span')
-            ele.textContent = sp[i]
-            ele.style = 'background-color: #918a3f; padding: 4px; border-radius: 5px'
-            strong.appendChild(ele)
-          } else {
-            let ele = document.createElement('span')
-            ele.textContent = sp[i]
-            ele.style = 'background-color: transparent; border-radius: 5px'
-            strong.appendChild(ele)
-          }
-        }
-      } else {
-        strong.textContent = item.code
-      }
-
-      const text = document.createElement("span");
-      //" — " + item.desc
-      if(item.desc.toLowerCase().includes(input) && input.length > 0) {
-        let sp = splitWithChunk(item.desc, input)
-
-        for(let i in sp) {
-          if(sp[i] == input) {
-            let ele = document.createElement('span')
-            ele.textContent = sp[i]
-            ele.style = 'background-color: #918a3f; padding: 4px; border-radius: 5px'
-            text.appendChild(ele)
-          } else {
-            let ele = document.createElement('span')
-            ele.textContent = sp[i]
-            ele.style = 'background-color: transparent; border-radius: 5px'
-            text.appendChild(ele)
-          }
-        }
-      } else {
-        text.textContent = item.desc
-      }
-      text.innerHTML = " — " + text.innerHTML.toUpperCase()
-
-      const section = document.createElement("em")
-
-      if(item.desc.toLowerCase().includes(input) && input.length > 0) {
-        let sp = splitWithChunk(item.system, input)
-
-        for(let i in sp) {
-          if(sp[i] == input) {
-            let ele = document.createElement('span')
-            ele.textContent = sp[i]
-            ele.style = 'background-color: #918a3f; padding: 4px; border-radius: 5px'
-            section.appendChild(ele)
-          } else {
-            let ele = document.createElement('span')
-            ele.textContent = sp[i]
-            ele.style = 'background-color: transparent; border-radius: 5px'
-            section.appendChild(ele)
-          }
-        }
-      } else {
-        section.textContent = item.desc
-      }
-
-      //section.textContent = item.system
-      section.style = "font-size: 12px"
-
-      div.appendChild(strong);
-      div.appendChild(text);
-      div.appendChild(document.createElement('br'))
-      div.appendChild(section)
-      div.appendChild(document.createElement('br'))
-      div.appendChild(document.createElement('br'))
+      div.innerHTML = `
+        <strong>${item.code}</strong>
+        — ${item.desc.toUpperCase()}
+        <br>
+        <em style="font-size:12px">
+          ${item.system.toUpperCase()}
+        </em>
+        <br><br>
+      `;
 
       resultsDiv.appendChild(div);
-      count++;
-      if (count >= MAX_RESULTS) break;
     }
+    return;
+  }
+
+  let count = 0;
+  const MAX_RESULTS = 75;
+
+  for(const item of wuc) {
+    const code = String(item.code || "");
+    const desc = String(item.desc || "");
+    const system = String(item.system || "");
+
+    const match =
+      code.toLowerCase().includes(input) ||
+      desc.toLowerCase().includes(input) ||
+      system.toLowerCase().includes(input);
+
+    if(!match) continue;
+
+    const div = document.createElement("div");
+
+    const strong = document.createElement("strong");
+    addHighlighted(strong, code, input);
+
+    const text = document.createElement("span");
+    text.appendChild(document.createTextNode(" — "));
+    addHighlighted(text, desc, input);
+
+    const section = document.createElement("em");
+    section.style.fontSize = "12px";
+    addHighlighted(section, system, input);
+
+    div.appendChild(strong);
+    div.appendChild(text);
+    div.appendChild(document.createElement("br"));
+    div.appendChild(section);
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
+
+    resultsDiv.appendChild(div);
+
+    count++;
+    if(count >= MAX_RESULTS) break;
+  }
+
+  if(count === 0) {
+    resultsDiv.textContent = "No WUC results found";
   }
 }
 
