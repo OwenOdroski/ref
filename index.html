@@ -1,7 +1,7 @@
 <html>
   <head>
     <script>
-    let active = true
+    let active = false
       if(active) {
         var consoleOutput = [];
         var ogLog = console.log;
@@ -33,13 +33,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/ref/manifest.json">
-    <script src="/ref/three.js"></script>
-    <script src="/ref/Orbit.js"></script>
-    <script src="/ref/Loader.js"></script>
-    <script src="/ref/security.js"></script>
-    <script src="/ref/script.js"></script>
-    <link rel="stylesheet" href="/ref/style.css">
+    <link rel="manifest" href="/manifest.json">
+    <script src="/three.js"></script>
+    <script src="/Orbit.js"></script>
+    <script src="/Loader.js"></script>
+    <script src="/security.js"></script>
+    <script src="/script.js"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}]
@@ -54,7 +54,7 @@
     <div id="blur-back"></div>
     <!--Fuel Load Calc-->
     <div class="item" id="updateNotice" style="display: none">
-      <h3>An updated .ENC is available</h3>
+      <h3 id="ud-title"></h3>
       <p id="ud-text"></p>
     </div>
     <div class="item">
@@ -168,6 +168,12 @@
           <button onclick="searchPanel()" id="panel-search-submit">Submit</button>
         </div>
       </div>
+      <div class="top-bar" id="comp-search" style="display: none">
+        <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
+        <div id="clearWrapper" style="display: inline">
+          <input type="number" placeholder="Search Component" id="searchComp">
+        </div>
+      </div>
       <canvas id="panel-canvas"></canvas>
       <div style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0);">
         <div style="display: flex; align-items: center;">
@@ -183,8 +189,8 @@
 
       <div id="selectors">
         <label style="color: black">Show Stations <input type="radio" id="check" name="selectors"></label><br>
-        <label style="color: black" id="hide-mode">Show MX Zones <input type="radio" id="check2" name="selectors"></label><br>
         <label style="color: black">Show Panels <input type="radio" id="check3" name="selectors" checked="true"></label><br>
+        <label style="color: black">Show Components <input type="radio" id="check4" name="selectors"></label><br>
       </div>
     </div>
 
@@ -210,6 +216,30 @@
       <span id="ident"></span>
       <p id="desccp"></p>
       <div id="cpDesc"></div>
+    </div>
+
+    <!-- Component Popup -->
+    <div id="comp-desc">
+      <div style="display: flex; width: 200px">
+        <button onclick="document.getElementById('comp-desc').style.display = 'none'" style="font-size: 15px; display: inline" class="x-button">✕</button>
+        <button id="component-note" style="font-size: 15px; display: inline" class="x-button">✏️</button>
+      </div>
+      <h3>Component Overview</h3>
+      <p class="inline"><strong>Nomenclature: </strong><p id="comp-nomen"></p></p>
+      <p class="inline"><strong>Part Number: </strong><p id="comp-pn"></p></p>
+      <p class="inline"><strong>Related System: </strong><p id="comp-system"></p></p>
+      <p class="inline"><strong>Work Unit Code: </strong><p id="comp-wuc"></p></p>
+      <p class="inline"><strong>TO Reference: </strong><p id="comp-to"></p></p>
+      <p class="inline"><strong>Description: </strong><p id="comp-descript"></p></p>
+      <strong>Related Components: </strong>
+      <div id="comp-related"><br></div>
+    </div>
+
+    <!-- Panel number popup -->
+
+    <div id="gen-popup">
+      <p id="gen-data"></p>
+      <button onclick="document.getElementById('gen-popup').style.display = 'none'; document.getElementById('blur-back').style.display = 'none'">Close</button>
     </div>
 
     <!-- Note popup -->
@@ -265,8 +295,8 @@
 
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
-      <img src="/ref/781H-images-0.jpg" class="h781">
-      <img src="/ref/781H-images-1.jpg" class="h781">
+      <img src="/781H-images-0.jpg" class="h781">
+      <img src="/781H-images-1.jpg" class="h781">
     </div>
     <div id="forms">
       <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
