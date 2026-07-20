@@ -832,10 +832,21 @@ function startPanelScreen() {
           if(group.visible) {
             if(intersects.length > 0) {
               let panel = allPanels[intersects[0].object.name]
+              let fm = (content, nothing) => {
+                if(content == undefined && nothing) {
+                  return ""
+                } else if(content == undefined && !nothing) {
+                  return "Not Available"
+                }
+                return content
+              }
               document.getElementById('gen-popup').style.display = "block"
               document.getElementById('blur-back').style.display = "block"
               document.getElementById('gen-data').textContent = panel.type + ' Number: ' + panel.number
               // Include TO Reference
+              document.getElementById('gen-ref').textContent = "TO Reference: " + fm(panel.ref, false)
+              document.getElementById('gen-fastener').textContent = "Fastener P/N: " + fm(panel.fast, false)
+              document.getElementById('gen-desc').textContent = fm(panel.desc, true)
             }
           }
           if(stations.visible) {
@@ -1158,9 +1169,7 @@ function addHighlighted(parent, value, input) {
 
     const mark = document.createElement("span");
     mark.textContent = text.slice(found, found + search.length).toUpperCase();
-    mark.style.backgroundColor = "#918a3f";
-    mark.style.padding = "4px";
-    mark.style.borderRadius = "5px";
+    mark.style = "padding: 4px; border-radius: 5px; background-color: #918a3f; color: inherit; display: inline; position: static; float: none;"
 
     parent.appendChild(mark);
 
