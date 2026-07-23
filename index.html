@@ -39,7 +39,7 @@
     <script src="./Loader.js"></script>
     <script src="./security.js"></script>
     <script src="./script.js"></script>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <!-- [{"type": "top", "data": ""}, {"type": "tab", "name": "", "data": ""}]
@@ -171,9 +171,10 @@
       <div class="top-bar" id="comp-search" style="display: none">
         <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
         <div id="clearWrapper" style="display: inline">
-          <input type="number" placeholder="Search Component" id="searchComp">
+          <input type="text" placeholder="Search Component" id="searchComp">
         </div>
       </div>
+      <div id="compRes"></div>
       <canvas id="panel-canvas"></canvas>
       <div style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0);">
         <div style="display: flex; align-items: center;">
