@@ -1032,6 +1032,81 @@ function startPanelScreen() {
   animate()
 }
 
+function formatWUC(text) {
+  return text.slice(0, 5)
+}
+
+window.addEventListener('load', function() {
+  let inpComp = document.getElementById('searchComp')
+  let resComp = document.getElementById('compRes')
+
+  function searchComp() {
+    // First get all components (name from WUC) and related components
+    let push = (data, name, related, index) => {
+      let wrapper = document.createElement('div')
+      let title = document.createElement('p')
+      let system = document.createElement('p')
+
+      if(!related) {
+        title.textContent = "(" + data.WUC + ") " + name
+        system.textContent = data.section
+      } else {
+        title.textContent = "(" + data.wuc + ") " + data.nomen
+        system.textContent = name.section
+      }
+
+      title.style = "font-weight: bold; margin: -3px"
+      system.style = "margin: -3px"
+      wrapper.style = "margin-top: 16px"
+
+      wrapper.onclick = function() {
+        // Clear Everything except this component
+        resComp.style.display = 'none'
+        for(let i = 0; i < comp.children.length; i++) {
+          if(comp.children[i].name.replace('x', '') != index) {
+            comp.children[i].visible = false
+          } else {
+            controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
+            camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
+            controls.update()
+          }
+        }
+      }
+
+      wrapper.appendChild(title)
+      wrapper.appendChild(system)
+      resComp.appendChild(wrapper)
+    }
+
+    compRes.innerHTML = ''
+
+    for(let i in components) {
+      for(let u in wuc) {
+        if(formatWUC(wuc[u].code) == components[i].WUC) {
+          if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
+            push(components[i], wuc[u].desc, false, i)
+          }
+          break
+        }
+      }
+      for(let u in components[i].related) {
+        if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
+          push(components[i].related[u], components[i], true, i)
+        }
+      }
+    }
+  }
+
+  inpComp.addEventListener('keyup', searchComp)
+  inpComp.addEventListener('focus', (e) => {
+    searchComp()
+    resComp.style.display = 'block'
+  })
+  // inpComp.addEventListener('blur', (e) => {
+  //   resComp.style.display = 'none'
+  // })
+})
+
 function closePanelScreen() {
   let canvas = document.getElementById('panel-3d')
   canvas.style.display = 'none'
