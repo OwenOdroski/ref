@@ -1057,7 +1057,7 @@ window.addEventListener('load', function() {
 
       title.style = "font-weight: bold; margin: -3px"
       system.style = "margin: -3px"
-      wrapper.style = "margin-top: 16px"
+      wrapper.style = "margin-top: 32px"
 
       wrapper.onclick = function() {
         // Clear Everything except this component
@@ -1082,11 +1082,11 @@ window.addEventListener('load', function() {
 
     for(let i in components) {
       for(let u in wuc) {
-        if(formatWUC(wuc[u].code) == components[i].WUC) {
+        if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
           if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
             push(components[i], wuc[u].desc, false, i)
+            break
           }
-          break
         }
       }
       for(let u in components[i].related) {
@@ -1101,10 +1101,8 @@ window.addEventListener('load', function() {
   inpComp.addEventListener('focus', (e) => {
     searchComp()
     resComp.style.display = 'block'
+    document.getElementById('compBack').style.display = 'block'
   })
-  // inpComp.addEventListener('blur', (e) => {
-  //   resComp.style.display = 'none'
-  // })
 })
 
 function closePanelScreen() {
