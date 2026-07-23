@@ -83,6 +83,19 @@ a:hover {
   white-space: pre-line;
   overflow-y: scroll
 }
+#compRes {
+  position: fixed;
+  top: 58px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 58px);
+  background-color: white;
+  z-index: 10;
+  display: none;
+  color: black;
+  padding: 16px;
+  overflow-y: auto
+}
 #comp-desc {
   position: fixed;
   top: 0px;
@@ -165,7 +178,7 @@ a:hover {
   top: 0;
   left: 0;
   width: 100%;
-  height: auto;
+  height: 58px;
   z-index: 10000;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
