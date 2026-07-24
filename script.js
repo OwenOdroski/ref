@@ -1048,7 +1048,7 @@ window.addEventListener('load', function() {
   let inpComp = document.getElementById('searchComp')
   let resComp = document.getElementById('compRes')
 
-  inpComp.onclick = function() {
+  document.getElementById('compBack').onclick = function() {
     document.getElementById('compRes').style.display = 'none';
     document.getElementById('compBack').style.display = 'none'
   }
