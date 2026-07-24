@@ -84,17 +84,19 @@ a:hover {
   overflow-y: scroll
 }
 #compRes {
-  position: fixed;
+  position: absolute;
   top: 58px;
   left: 0;
-  width: 100%;
-  height: calc(100% - 58px);
-  background-color: white;
-  z-index: 99999;
-  display: none;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  background: white;
   color: black;
-  padding: 16px;
-  overflow-y: auto
+  z-index: 1000000;
+  display: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 #comp-desc {
   position: fixed;
@@ -454,9 +456,11 @@ option {
 
 /* Canvas stays as you had it */
 #panel-canvas {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
 }
 
