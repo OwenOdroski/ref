@@ -446,7 +446,7 @@ function fuelQuan() {
 function loadList() { // Load refrences
   let list = document.getElementById('to-search-res')
 
-  for(let i in ref) {
+  for(let i = 0; i < ref.length; i++) {
     let li = document.createElement('div')
 
     li.textContent = ref[i].name.toUpperCase()
@@ -534,7 +534,7 @@ function startPanelScreen() {
 
     const loader = new THREE.GLTFLoader();
 
-    for(let i in components) {
+    for(let i = 0; i < components.length; i++) {
       const geometry = new THREE.Geometry();
       const modelData = components[i].modelData
 
@@ -593,7 +593,7 @@ function startPanelScreen() {
         }
       });
 
-      for(let i in positions) {
+      for(let i = 0; i < positions.length; i++) {
         let pos = positions[i][1]
         let width  = 40
 
@@ -731,7 +731,7 @@ function startPanelScreen() {
     // Load past points from localStorage
     let value = allPanels//JSON.parse(localStorage.getItem('panels'))
 
-    for(let i in value) {
+    for(let i = 0; i < value.length; i++) {
       let mesh = new THREE.Mesh(
         new THREE.SphereGeometry(1, 12, 12),
         new THREE.MeshBasicMaterial({color: 0xFF0000, opacity: 0.4, transparent: true})
@@ -742,7 +742,7 @@ function startPanelScreen() {
       mesh.position.z = value[i].cords[2]
       group.add(mesh)
     }
-    for(let i in cockPanels) {
+    for(let i = 0; i < cockPanels.length; i++) {
       let mesh = new THREE.Mesh(
         new THREE.SphereGeometry(0.1, 15, 15),
         new THREE.MeshBasicMaterial({color: 0xFF0000})
@@ -891,12 +891,16 @@ function startPanelScreen() {
                 pn.textContent = data.pn
               }
 
-              for(let i in wuc) {
-                if(wuc[i].code.includes(data.WUC)) {
+              for(let i = 0; i < wuc.length; i++) {
+                if(formatWUC(wuc[i].code) == formatWUC(data.WUC)) {
                   nomen.textContent = wuc[i].desc + "\n" + wuc[i].system
                   WUC.textContent = data.WUC
                   break
                 }
+              }
+              if(nomen.textContent.length < 3) {
+                nomen.textContent = 'Not Found'
+                WUC.textContent = 'Not Found'
               }
 
               // Related Comps
@@ -974,7 +978,7 @@ function startPanelScreen() {
                   panelDesc[ident].push({type: "tab", name: "notes", data: userNotes.panelData[intersects[0].object.name]})
                 }
 
-                for(let i in panelDesc[ident]) {
+                for(let i = 0; i < panelDesc[ident].length; i++) {
                   let curr = panelDesc[ident][i]
 
                   if(curr.type == 'tab') {
@@ -1078,10 +1082,10 @@ window.addEventListener('load', function() {
       resComp.appendChild(wrapper)
     }
 
-    compRes.innerHTML = ''
+    resComp.innerHTML = ''
 
-    for(let i in components) {
-      for(let u in wuc) {
+    for(let i = 0; i < components.length; i++) {
+      for(let u = 0; u < wuc.length; u++) {
         if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
           if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
             push(components[i], wuc[u].desc, false, i)
@@ -1089,7 +1093,7 @@ window.addEventListener('load', function() {
           }
         }
       }
-      for(let u in components[i].related) {
+      for(let u = 0; u < components[i].related.length; u++) {
         if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
           push(components[i].related[u], components[i], true, i)
         }
@@ -1097,7 +1101,7 @@ window.addEventListener('load', function() {
     }
   }
 
-  inpComp.addEventListener('keyup', searchComp)
+  inpComp.addEventListener('input', searchComp)
   inpComp.addEventListener('focus', (e) => {
     searchComp()
     resComp.style.display = 'block'
@@ -1129,7 +1133,7 @@ function openLegal() {
 function searchPanel() {
   let search = document.getElementById('searchPanel')
 
-  for(let i in allPanels) {
+  for(let i = 0; i < allPanels.length; i++) {
     let curr = allPanels[i]
 
     if(curr.number == search.value) {
@@ -1164,7 +1168,7 @@ function viewConsole() {
 
   wrapper.innerHTML = ''
 
-  for(let i in consoleOutput) {
+  for(let i = 0; i < consoleOutput.length; i++) {
     let div = document.createElement('div')
     let content = document.createTextNode(consoleOutput[i][1].slice(0, 200))
 
@@ -1342,7 +1346,7 @@ function splitWithChunk(base, chunk) {
   let t2 = base.slice(index + chunk.length)
   let arr = [t1, chunk, t2]
 
-  for(let i in arr) {
+  for(let i = 0; i < arr.length; i++) {
     if(arr[i] != '') {
       r.push(arr[i])
     }
@@ -1376,7 +1380,7 @@ function openChecklist(type) {
 
   name.textContent = res.name
 
-  for(let i in checklist) {
+  for(let i = 0; i < checklist.length; i++) {
     let button = document.createElement('div')
 
     let label = document.createElement('label')
@@ -1435,7 +1439,7 @@ function searchPhoneNum() {
           let exts = ext.split('/')
 
           wrapper.innerHTML = ''
-          for(let i in exts) {
+          for(let i = 0; i < exts.length; i++) {
             let button = document.createElement('button')
 
             button.textContent = exts[i]
@@ -1542,7 +1546,7 @@ function openSystems() {
       document.getElementById('sys-popup').style.display = 'block'
       document.getElementById('sys-tab').innerHTML = ''
 
-      for(let i in sys) {
+      for(let i = 0; i < sys.length; i++) {
         if(sys[i].type == 'top') {
           document.getElementById('sys-name').textContent = con[name]
           document.getElementById('sys-too').innerHTML = convert(sys[i].data)
@@ -1587,7 +1591,7 @@ function openSystems() {
   }
 
   wrapper.innerHTML = ''
-  for(let i in cn) {
+  for(let i = 0; i < cn.length; i++) {
     let name = cn[i].slice(4, 10)
     let text = con[name]
 
@@ -1683,7 +1687,7 @@ function openIMDS() {
 
   buttons.textContent = ''
 
-  for(let i in notes) {
+  for(let i = 0; i < notes.length; i++) {
     let button = document.createElement('button')
 
     button.textContent = notes[i].name
@@ -1691,7 +1695,7 @@ function openIMDS() {
       let results = document.getElementById('imds-results')
       results.textContent = ''
 
-      for(let u in notes[i].steps) {
+      for(let u = 0; u < notes[i].steps.length; u++) {
         let p = document.createElement('p')
 
         p.textContent = notes[i].steps[u]
