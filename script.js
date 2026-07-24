@@ -1049,6 +1049,17 @@ let resComp = document.getElementById('compRes')
 
 function searchComp() {
   // First get all components (name from WUC) and related components
+
+  resComp.innerHTML = `
+      <h1 style="color:red">
+          SEARCHCOMP FUCKING RAN
+      </h1>
+  `
+
+  resComp.style.display = 'block'
+  resComp.style.zIndex = '2147483647'
+
+  return
   resComp.style.display = 'block'
   document.getElementById('compBack').style.display = 'block'
   resComp.innerHTML = ''
@@ -1110,6 +1121,8 @@ function searchComp() {
 inpComp.addEventListener('focus', (e) => {
   searchComp()
 })
+inpComp.addEventListener('focus', searchComp)
+inpComp.addEventListener('input', searchComp)
 
 function closePanelScreen() {
   let canvas = document.getElementById('panel-3d')
