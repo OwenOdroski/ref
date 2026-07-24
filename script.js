@@ -888,9 +888,9 @@ function startPanelScreen() {
               if(data.pn == '' || data.pn == undefined) {
                 pn.textContent = "Not Found"
               } else {
-                pn.textContent = data.pn
+                pn.textContent = data.pn.toUpperCase()
               }
-              WUC.textContent = data.WUC
+              WUC.textContent = formatWUC(data.WUC)
 
               for(let i = 0; i < wuc.length; i++) {
                 if(formatWUC(wuc[i].code) == formatWUC(data.WUC)) {
@@ -932,8 +932,8 @@ function startPanelScreen() {
                 summary.textContent = curr.nomen
                 nomen.textContent = curr.nomen
                 to.textContent = curr.ref
-                wuc.textContent = curr.wuc
-                pNum.textContent = curr.pNum
+                wuc.textContent = formatWUC(curr.wuc)
+                pNum.textContent = curr.pNum.toUpperCase()
                 desc.textContent = curr.desc
 
                 option.style = "padding-left: 16px"
@@ -1044,73 +1044,71 @@ function formatWUC(text) {
   return text.slice(0, 5).toUpperCase()
 }
 
-window.addEventListener('load', function() {
-  let inpComp = document.getElementById('searchComp')
-  let resComp = document.getElementById('compRes')
+let inpComp = document.getElementById('searchComp')
+let resComp = document.getElementById('compRes')
 
-  function searchComp() {
-    // First get all components (name from WUC) and related components
-    let push = (data, name, related, index) => {
-      let wrapper = document.createElement('div')
-      let title = document.createElement('p')
-      let system = document.createElement('p')
+function searchComp() {
+  // First get all components (name from WUC) and related components
+  resComp.style.display = 'block'
+  document.getElementById('compBack').style.display = 'block'
+  resComp.innerHTML = ''
 
-      if(!related) {
-        title.textContent = "(" + data.WUC + ") " + name
-        system.textContent = data.section
-      } else {
-        title.textContent = "(" + data.wuc + ") " + data.nomen
-        system.textContent = name.section
-      }
+  let push = (data, name, related, index) => {
+    let wrapper = document.createElement('div')
+    let title = document.createElement('p')
+    let system = document.createElement('p')
 
-      title.style = "font-weight: bold; margin: -3px"
-      system.style = "margin: -3px"
-      wrapper.style = "margin-top: 32px"
-
-      wrapper.onclick = function() {
-        // Clear Everything except this component
-        resComp.style.display = 'none'
-        document.getElementById('compBack').style.display = 'none'
-        for(let i = 0; i < comp.children.length; i++) {
-          if(comp.children[i].name.replace('x', '') != index) {
-            comp.children[i].visible = false
-          } else {
-            controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
-            camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
-            controls.update()
-          }
-        }
-      }
-
-      wrapper.appendChild(title)
-      wrapper.appendChild(system)
-      resComp.appendChild(wrapper)
+    if(!related) {
+      title.textContent = "(" + data.WUC + ") " + name
+      system.textContent = data.section
+    } else {
+      title.textContent = "(" + data.wuc + ") " + data.nomen
+      system.textContent = name.section
     }
 
-    resComp.innerHTML = ''
+    title.style = "font-weight: bold; margin: -3px"
+    system.style = "margin: -3px"
+    wrapper.style = "margin-top: 32px"
 
-    for(let i = 0; i < components.length; i++) {
-      for(let u = 0; u < wuc.length; u++) {
-        if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
-          if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
-            push(components[i], wuc[u].desc, false, i)
-            break
-          }
+    wrapper.onclick = function() {
+      // Clear Everything except this component
+      resComp.style.display = 'none'
+      document.getElementById('compBack').style.display = 'none'
+      for(let i = 0; i < comp.children.length; i++) {
+        if(comp.children[i].name.replace('x', '') != index) {
+          comp.children[i].visible = false
+        } else {
+          controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
+          camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
+          controls.update()
         }
       }
-      for(let u = 0; u < components[i].related.length; u++) {
-        if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
-          push(components[i].related[u], components[i], true, i)
+    }
+
+    wrapper.appendChild(title)
+    wrapper.appendChild(system)
+    resComp.appendChild(wrapper)
+  }
+
+  for(let i = 0; i < components.length; i++) {
+    for(let u = 0; u < wuc.length; u++) {
+      if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
+        if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
+          push(components[i], wuc[u].desc, false, i)
+          break
         }
+      }
+    }
+    for(let u = 0; u < components[i].related.length; u++) {
+      if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
+        push(components[i].related[u], components[i], true, i)
       }
     }
   }
+}
 
-  inpComp.addEventListener('focus', (e) => {
-    searchComp()
-    resComp.style.display = 'block'
-    document.getElementById('compBack').style.display = 'block'
-  })
+inpComp.addEventListener('focus', (e) => {
+  searchComp()
 })
 
 function closePanelScreen() {
