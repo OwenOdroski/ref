@@ -890,21 +890,25 @@ function startPanelScreen() {
               } else {
                 pn.textContent = data.pn
               }
+              WUC.textContent = data.WUC
 
               for(let i = 0; i < wuc.length; i++) {
                 if(formatWUC(wuc[i].code) == formatWUC(data.WUC)) {
                   nomen.textContent = wuc[i].desc + "\n" + wuc[i].system
-                  WUC.textContent = data.WUC
                   break
                 }
               }
               if(nomen.textContent.length < 3) {
                 nomen.textContent = 'Not Found'
-                WUC.textContent = 'Not Found'
               }
 
               // Related Comps
               related.innerHTML = "<br>"
+              if(data.related.length == 0) {
+                let none = document.createElement('p')
+                none.textContent = 'No Related Components'
+                related.appendChild(none)
+              }
               for(let x = 0; x < data.related.length; x++) {
                 let curr = data.related[x]
                 let option = document.createElement('details')
@@ -1037,7 +1041,7 @@ function startPanelScreen() {
 }
 
 function formatWUC(text) {
-  return text.slice(0, 5)
+  return text.slice(0, 5).toUpperCase()
 }
 
 window.addEventListener('load', function() {
@@ -1066,6 +1070,7 @@ window.addEventListener('load', function() {
       wrapper.onclick = function() {
         // Clear Everything except this component
         resComp.style.display = 'none'
+        document.getElementById('compBack').style.display = 'none'
         for(let i = 0; i < comp.children.length; i++) {
           if(comp.children[i].name.replace('x', '') != index) {
             comp.children[i].visible = false
@@ -1101,7 +1106,6 @@ window.addEventListener('load', function() {
     }
   }
 
-  inpComp.addEventListener('input', searchComp)
   inpComp.addEventListener('focus', (e) => {
     searchComp()
     resComp.style.display = 'block'
