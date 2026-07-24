@@ -90,7 +90,7 @@ a:hover {
   width: 100%;
   height: calc(100% - 58px);
   background-color: white;
-  z-index: 10;
+  z-index: 99999;
   display: none;
   color: black;
   padding: 16px;
@@ -182,7 +182,6 @@ a:hover {
   z-index: 10000;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  /* background: rgba(15, 18, 20, 0.72); */
   border-bottom: 1px solid var(--line-2);
   display: inline
 }
