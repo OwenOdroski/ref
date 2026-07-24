@@ -1048,6 +1048,11 @@ window.addEventListener('load', function() {
   let inpComp = document.getElementById('searchComp')
   let resComp = document.getElementById('compRes')
 
+  inpComp.onclick = function() {
+    document.getElementById('compRes').style.display = 'none';
+    document.getElementById('compBack').style.display = 'none'
+  }
+
   function searchComp() {
     resComp.style.display = 'block'
     document.getElementById('compBack').style.display = 'block'
