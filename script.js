@@ -1107,9 +1107,6 @@ window.addEventListener('load', function() {
     }
   }
 
-  inpComp.addEventListener('focus', (e) => {
-    searchComp()
-  })
   inpComp.addEventListener('focus', searchComp)
   inpComp.addEventListener('input', searchComp)
 })
