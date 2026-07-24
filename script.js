@@ -1044,85 +1044,87 @@ function formatWUC(text) {
   return text.slice(0, 5).toUpperCase()
 }
 
-let inpComp = document.getElementById('searchComp')
-let resComp = document.getElementById('compRes')
+window.addEventListener('load', function() {
+  let inpComp = document.getElementById('searchComp')
+  let resComp = document.getElementById('compRes')
 
-function searchComp() {
-  // First get all components (name from WUC) and related components
+  function searchComp() {
+    // First get all components (name from WUC) and related components
 
-  resComp.innerHTML = `
-      <h1 style="color:red">
-          SEARCHCOMP FUCKING RAN
-      </h1>
-  `
+    resComp.innerHTML = `
+        <h1 style="color:red">
+            SEARCHCOMP FUCKING RAN
+        </h1>
+    `
 
-  resComp.style.display = 'block'
-  resComp.style.zIndex = '2147483647'
+    resComp.style.display = 'block'
+    resComp.style.zIndex = '2147483647'
 
-  return
-  resComp.style.display = 'block'
-  document.getElementById('compBack').style.display = 'block'
-  resComp.innerHTML = ''
+    return
+    resComp.style.display = 'block'
+    document.getElementById('compBack').style.display = 'block'
+    resComp.innerHTML = ''
 
-  let push = (data, name, related, index) => {
-    let wrapper = document.createElement('div')
-    let title = document.createElement('p')
-    let system = document.createElement('p')
+    let push = (data, name, related, index) => {
+      let wrapper = document.createElement('div')
+      let title = document.createElement('p')
+      let system = document.createElement('p')
 
-    if(!related) {
-      title.textContent = "(" + data.WUC + ") " + name
-      system.textContent = data.section
-    } else {
-      title.textContent = "(" + data.wuc + ") " + data.nomen
-      system.textContent = name.section
+      if(!related) {
+        title.textContent = "(" + data.WUC + ") " + name
+        system.textContent = data.section
+      } else {
+        title.textContent = "(" + data.wuc + ") " + data.nomen
+        system.textContent = name.section
+      }
+
+      title.style = "font-weight: bold; margin: -3px"
+      system.style = "margin: -3px"
+      wrapper.style = "margin-top: 32px"
+
+      wrapper.onclick = function() {
+        // Clear Everything except this component
+        resComp.style.display = 'none'
+        document.getElementById('compBack').style.display = 'none'
+        for(let i = 0; i < comp.children.length; i++) {
+          if(comp.children[i].name.replace('x', '') != index) {
+            comp.children[i].visible = false
+          } else {
+            controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
+            camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
+            controls.update()
+          }
+        }
+      }
+
+      wrapper.appendChild(title)
+      wrapper.appendChild(system)
+      resComp.appendChild(wrapper)
     }
 
-    title.style = "font-weight: bold; margin: -3px"
-    system.style = "margin: -3px"
-    wrapper.style = "margin-top: 32px"
-
-    wrapper.onclick = function() {
-      // Clear Everything except this component
-      resComp.style.display = 'none'
-      document.getElementById('compBack').style.display = 'none'
-      for(let i = 0; i < comp.children.length; i++) {
-        if(comp.children[i].name.replace('x', '') != index) {
-          comp.children[i].visible = false
-        } else {
-          controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
-          camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
-          controls.update()
+    for(let i = 0; i < components.length; i++) {
+      for(let u = 0; u < wuc.length; u++) {
+        if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
+          if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
+            push(components[i], wuc[u].desc, false, i)
+            break
+          }
+        }
+      }
+      for(let u = 0; u < components[i].related.length; u++) {
+        if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
+          push(components[i].related[u], components[i], true, i)
         }
       }
     }
-
-    wrapper.appendChild(title)
-    wrapper.appendChild(system)
-    resComp.appendChild(wrapper)
   }
 
-  for(let i = 0; i < components.length; i++) {
-    for(let u = 0; u < wuc.length; u++) {
-      if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
-        if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
-          push(components[i], wuc[u].desc, false, i)
-          break
-        }
-      }
-    }
-    for(let u = 0; u < components[i].related.length; u++) {
-      if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
-        push(components[i].related[u], components[i], true, i)
-      }
-    }
-  }
-}
-
-inpComp.addEventListener('focus', (e) => {
-  searchComp()
+  inpComp.addEventListener('focus', (e) => {
+    searchComp()
+  })
+  inpComp.addEventListener('focus', searchComp)
+  inpComp.addEventListener('input', searchComp)
 })
-inpComp.addEventListener('focus', searchComp)
-inpComp.addEventListener('input', searchComp)
 
 function closePanelScreen() {
   let canvas = document.getElementById('panel-3d')
