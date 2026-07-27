@@ -1,6 +1,6 @@
 // Get DB
 let root = '.'
-let register = false
+let register = true
 let version = "3.0.1"
 
 function isIphonePWA() {
