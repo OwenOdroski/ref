@@ -1050,7 +1050,7 @@ window.addEventListener('load', function() {
 
   function searchComp() {
     resComp.style.display = 'block'
-    document.getElementById('compBack').style.display = 'block'
+    document.getElementById('compBack').style.display = 'inline'
     resComp.innerHTML = ''
 
     let push = (data, name, related, index) => {
