@@ -20,7 +20,7 @@ if ('serviceWorker' in navigator && register) {
       updateViaCache: "none",
     })
 
-    checkJSON()
+    //checkJSON()
   });
 }
 
