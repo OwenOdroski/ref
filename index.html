@@ -1,7 +1,7 @@
 <html>
   <head>
     <script>
-    let active = false
+    let active = true
       if(active) {
         var consoleOutput = [];
         var ogLog = console.log;
@@ -161,6 +161,7 @@
       <div id="loader-wrapper">
         <p id="loader-status">0% Loaded</p>
       </div>
+
       <div class="top-bar" id="searchBarPanels">
         <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
         <div id="clearWrapper" style="display: inline">
@@ -168,20 +169,23 @@
           <button onclick="searchPanel()" id="panel-search-submit">Submit</button>
         </div>
       </div>
-      <div class="top-bar" id="comp-search" style="display: none">
-        <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
+
+      <div class="top-bar" id="comp-search" style="display: none; z-index: 99999999">
         <div id="clearWrapper" style="display: inline">
+          <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
           <input type="text" placeholder="Search Component" id="searchComp">
-          <button style="float: right; display: none" id="compBack">Back</button>
+          <button style="float: right; display: none" id="compBack" onclick="document.getElementById('compRes').style.display='none';document.getElementById('compBack').style.display='none'">Back</button>
         </div>
+        <div id="compRes"></div>
       </div>
-      <div id="compRes"></div>
+
       <div style="position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0); z-index: 10">
         <div style="display: flex; align-items: center;">
           <button onclick="document.getElementById('panelSettings').style.display='block'" style="margin-right: 3px; display: inline;">☰</button>
           <button id="switch" style="margin-left: 3px; width: 190px; display: inline; font-size: 14px">Forward Cockpit</button>
         </div>
       </div>
+
       <canvas id="panel-canvas"></canvas>
     </div>
 
@@ -194,18 +198,6 @@
         <label style="color: black">Show Panels <input type="radio" id="check3" name="selectors" checked="true"></label><br>
         <label style="color: black">Show Components <input type="radio" id="check4" name="selectors"></label><br>
       </div>
-    </div>
-
-    <!-- Mx Zone Popup -->
-    <div id="zone-desc">
-      <div style="display: flex; width: 200px">
-        <button onclick="document.getElementById('zone-desc').style.display = 'none'" style="font-size: 15px; display: inline" class="x-button">✕</button>
-        <button id="zone-note" style="font-size: 15px; display: inline" class="x-button">✏️</button>
-      </div>
-      <h2 id="zoneName" style="margin-bottom: -10px"></h2>
-      <span id="zone-ident" style="margin-top: -10px"></span>
-      <p id="zoneDesc" style="margin-top: 32px"></p>
-      <div id="zone-body"></div>
     </div>
 
     <!-- Cockpit popup -->
@@ -418,6 +410,9 @@
       <p>A user on F-16.net submitted a F-16 exterior panel and door layout diagram. Submitted by "VPRFIXER" on January 28th, 2009, in a discussion post. <a href="https://www.f-16.net/forum/viewtopic.php?t=11758">SOURCE HERE</a></p>
       <p>The F-16 3D model was created by "bohmerang" on sketchfab.com (a German artist who releases his art for free, created on "Blender"). The panels on the model are consistent with the panels found on the chart. <a href="https://sketchfab.com/3d-models/f-16-fighting-falcon-fighter-jet-free-f0b00989e5634764848ef2c235c64db5">SOURCE HERE</a></p>
 
+      <h4>3D Spatial Index</h4>
+      <p>This feature is unavailable for all users except the creator.</p>
+
       <h4>TO Search</h4>
       <p>Technical Order names are listed for reference purposes only. No official Technical Order content is included.</p>
 
@@ -434,9 +429,6 @@
       <a href="https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3">SOURCE HERE (MODEL)</a><br>
       <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-1%20BMS.pdf">SOURCE HERE (FALCON BMS SYSTEMS)</a><br>
       <a href="https://cdn.falcon-bms.com/docs/4.37/TO%201F-16CMAM-34-1-1%20BMS.pdf">SOURCE HERE (FALCON BMS WEAPONS)</a><br>
-
-      <h4>Zones/Systems page</h4>
-      <p>Nearly all the information in these two pages are source from the Falcon BMS Systems document and the Falcon BMS Weapons document mentioned previously. There were other sources that were not mentioned that were used to clarify specific components or systems (not from official tech data).</p>
 
       <h4>Checklists</h4>
       <p>This is not a replacement for TO's. Checklists are organizational aids and do not replace official inspection procedures. This is used to help confirm that each step was accomplished. No tech data is included in these checklists</p>
