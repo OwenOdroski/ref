@@ -1,7 +1,7 @@
 // Get DB
 let root = '.'
 let register = true
-let version = "3.0.1"
+let version = "4.0.1"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -202,13 +202,11 @@ async function checkJSON() {
 
         if (!dec.ok) {
           if (dec.reason === "decrypt_failed") {
-            alert("Wrong password OR file corrupted/tampered.");
+            alert("Wrong password or file corrupted/tampered.");
           } else {
             alert("Bad file format.");
           }
         } else {
-          let json = dec.value
-
           let d = new Date(dec.value.meta.els)
           let td = new Date()
 
@@ -331,20 +329,28 @@ async function loadPage(db, isWebAuthn) {
   }
 
   if(data != null) {
-    forms = data.forms
-    allPanels = data.panels
-    ref = data.to
-    notes = data.notes
-    checklists = data.checklists
-    wuc = data.WUC
-    refDes = data.ref
-    cockPanels = data.cpPanels
-    panelDesc = data.panelData
-    phone = data.phone
-    systems = data.ops
-    components = data.components
+    allPanels = data.system.panels
+    ref = data.system.to
+    wuc = data.system.WUC
+    refDes = data.system.ref
+    cockPanels = data.system.cpPanels
+    panelDesc = data.system.panelData
+    systems = data.system.ops
+    components = data.system.components
+
+    phone = data.local.db.phone
+    notes = data.local.db.notes
+    checklists = data.local.db.checklists
+
+    // Load 3D model in the background
+    startPanelScreen(true)
 
     document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
+
+    document.getElementById('metadata').innerHTML =
+      "LOGGED IN AS: " + data.meta.name.toUpperCase() + "<br>" +
+      "EXPIRATION DATE: " + new Date(data.meta.els).toLocaleDateString("en-US") + "<br>" +
+      "UNIT: " + data.meta.unit.toUpperCase()
 
     if(data.version != version) {
       document.getElementById('updateNotice').style.display = 'block'
@@ -479,14 +485,7 @@ var scene, camera, renderer, controls, mesh, group, light, group2, stations
 let panels = allPanels
 let newPanels = []
 
-/*
-  Mistakes made so far
-    i25 - Panel number is 4419
-*/
-
-//{cords: [0, 0, 0], name: "Left Clam Shell", number: 2202, type: "Panel"}
-
-function startPanelScreen() {
+function startPanelScreen(hide) {
   let canvas = document.getElementById('panel-3d')
   let c = document.querySelector('#panel-canvas')
   let c2 = document.getElementById('panel-canvas')
@@ -494,9 +493,11 @@ function startPanelScreen() {
   let s = document.getElementById('loader-status')
   let mode3 = 0
   let planeOpacity = 1
-  c2.style.display = 'block'
-  canvas.style.display = 'block'
-  w.style.display = 'block'
+  if(!hide) {
+    c2.style.display = 'block'
+    canvas.style.display = 'block'
+    w.style.display = 'block'
+  }
 
   // Create scene, load 3d model, and setup orbit controls
   if(scene == undefined) {
@@ -1050,7 +1051,7 @@ window.addEventListener('load', function() {
 
   function searchComp() {
     resComp.style.display = 'block'
-    document.getElementById('compBack').style.display = 'inline'
+    document.getElementById('compBack').style.display = 'block'
     resComp.innerHTML = ''
 
     let push = (data, name, related, index) => {
