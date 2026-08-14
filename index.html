@@ -154,6 +154,7 @@
       <button onclick="startPanelScreen()" style="width: 130px">Panel Lookup</button>
       <button onclick="openIMDS()" style="width: 130px">References</button>
       <button onclick="openSystems()" style="width: 130px">Systems</button>
+      <button onclick="document.getElementById('H-content').style.display = 'block'">781H Carry Forward</button>
     </div>
 
     <!-- Panel 3D wrapper -->
@@ -282,21 +283,10 @@
       <div id="checklist-items"></div>
     </div>
 
-    <!-- Forms -->
-    <div class="item tohide">
-      <h3>Pre-filled out forms</h3>
-      <button onclick="openForms('access')">Access Door/Panel open/close</button>
-      <button onclick="openForms('lox-serv')">LOX Servicing</button>
-      <button onclick="document.getElementById('H-content').style.display = 'block'">781H Carry Forward</button>
-    </div>
-
     <div id="H-content">
       <button onclick="document.getElementById('H-content').style.display = 'none'" class="x-button">✕</button>
       <img src="./781H-images-0.jpg" class="h781">
       <img src="./781H-images-1.jpg" class="h781">
-    </div>
-    <div id="forms">
-      <canvas id="form-canvas" onclick="document.getElementById('forms').style.display = 'none'"></canvas>
     </div>
 
     <!--Quick access TO Reference-->
@@ -376,6 +366,8 @@
       <button onclick="document.getElementById('system').style.display = 'none'" class="x-button">✕</button>
       <p id="app-version"></p>
       <p id="enc-version"></p>
+      <h4>USER INFO</h4>
+      <p id="metadata" style="margin-left: 16px; margin-top: -16px"></p>
     </div>
 
     <div id="legal">
