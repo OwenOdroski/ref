@@ -186,6 +186,21 @@ a:hover {
 .x-button {
   margin-top: 20px
 }
+p.no-margin {
+  margin-top: -16px!important
+}
+button.radio-button {
+  all: unset;
+  background: transparent !important;
+  /* border: none !important; */
+  box-shadow: none !important;
+  cursor: pointer;
+  border-radius: 0px;
+  color: white;
+  border-bottom: 2px solid gray;
+  padding: 12px
+}
+
 #compBack {
   position: fixed;
   top: 0;
