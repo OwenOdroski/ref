@@ -175,7 +175,7 @@
         <div id="clearWrapper" style="display: inline">
           <button onclick="closePanelScreen()" style="font-size: 15px; display: inline" class="x-button">✕</button>
           <input type="text" placeholder="Search Component" id="searchComp">
-          <button style="float: right; display: none" id="compBack" class="x-button" onclick="document.getElementById('compRes').style.display='none';document.getElementById('compBack').style.display='none'">Back</button>
+          <button id="compBack" class="x-button" onclick="document.getElementById('compRes').style.display='none';document.getElementById('compBack').style.display='none'">Back</button>
         </div>
       </div>
       <div id="compRes"></div>
@@ -184,6 +184,7 @@
         <div style="display: flex; align-items: center;">
           <button onclick="document.getElementById('panelSettings').style.display='block'" style="margin-right: 3px; display: inline;">☰</button>
           <button id="switch" style="margin-left: 3px; width: 190px; display: inline; font-size: 14px">Forward Cockpit</button>
+          <button onclick="document.getElementById('filterSettings').style.display='block'" style="margin-right: 3px; display: inline; font-size: 22px; padding-top: 4px; padding-bottom: 4px; margin-left: -2px">&#9881;</button>
         </div>
       </div>
 
@@ -199,6 +200,14 @@
         <label style="color: black">Show Panels <input type="radio" id="check3" name="selectors" checked="true"></label><br>
         <label style="color: black">Show Components <input type="radio" id="check4" name="selectors"></label><br>
       </div>
+    </div>
+
+    <div id="filterSettings">
+      <button onclick="document.getElementById('filterSettings').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
+      <h3>Filter Settings</h3>
+
+      <h4>Optional Equipment</h4>
+      <div id="noc-parts" style="width: 100%; height: 300px; background-color: lightgray; padding: 8px; overflow-y: auto"></div>
     </div>
 
     <!-- Cockpit popup -->
