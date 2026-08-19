@@ -1,7 +1,7 @@
 // Get DB
 let root = '.'
 let register = true
-let version = "4.0.1"
+let version = "4.1.1"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -61,14 +61,14 @@ window.addEventListener("load", () => {
     const items = document.getElementsByClassName("x-button");
 
     for (let el of items) {
-      el.style = "margin-top: 50px";
+      el.style.marginTop = "50px"
     }
   } else {
     document.getElementById('spacer').style = 'height: 8px'
     const items = document.getElementsByClassName("x-button");
 
     for (let el of items) {
-      el.style = "margin-top: 8px";
+      el.style.marginTop = "8px";
     }
   }
 })
@@ -534,42 +534,71 @@ function startPanelScreen(hide) {
     ]
 
     const loader = new THREE.GLTFLoader();
+    const nocwrap = document.getElementById('noc-parts')
 
     for(let i = 0; i < components.length; i++) {
-      const geometry = new THREE.Geometry();
-      const modelData = components[i].modelData
+      if(components[i].type != 'noc') {
+        const geometry = new THREE.Geometry();
+        const modelData = components[i].modelData
 
-      for(let v of modelData.vertices) {
-        geometry.vertices.push(
-          new THREE.Vector3(v[0], v[1], v[2])
+        for(let v of modelData.vertices) {
+          geometry.vertices.push(
+            new THREE.Vector3(v[0], v[1], v[2])
+          );
+        }
+
+        for(let f of modelData.faces) {
+          geometry.faces.push(
+            new THREE.Face3(f[0], f[1], f[2])
+          );
+        }
+
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+
+        const mesh = new THREE.Mesh(
+          geometry,
+          new THREE.MeshBasicMaterial({
+            color: 0x00ff00
+          })
         );
+
+        mesh.name = "x" + i;
+
+        const t = modelData.transform;
+
+        mesh.position.set(t.pos[0], t.pos[1], t.pos[2]);
+        mesh.rotation.set(t.rot[0], t.rot[1], t.rot[2]);
+        mesh.scale.set(t.scale[0], t.scale[1], t.scale[2]);
+
+        comp.add(mesh)
+      } else {
+        // Optional equipment
+        let wrap = document.createElement('div')
+        let name = document.createElement('strong')
+        let section = document.createElement('p')
+
+        name.textContent = '(' + components[i].wuc + ') ' + components[i].nomen
+        section.textContent = components[i].section
+
+        section.style = 'margin-top: -3px'
+
+        wrap.onclick = function() {
+          // View info
+          document.getElementById('comp-nomen').textContent = components[i].nomen
+          document.getElementById('comp-pn').textContent = components[i].pNum
+          document.getElementById('comp-system').textContent = components[i].section
+          document.getElementById('comp-wuc').textContent = components[i].wuc
+          document.getElementById('comp-to').textContent = components[i].ref
+          document.getElementById('comp-descript').textContent = components[i].desc
+
+          document.getElementById('comp-desc').style.display = 'block'
+        }
+
+        wrap.appendChild(name)
+        wrap.appendChild(section)
+        nocwrap.appendChild(wrap)
       }
-
-      for(let f of modelData.faces) {
-        geometry.faces.push(
-          new THREE.Face3(f[0], f[1], f[2])
-        );
-      }
-
-      geometry.computeFaceNormals();
-      geometry.computeVertexNormals();
-
-      const mesh = new THREE.Mesh(
-        geometry,
-        new THREE.MeshBasicMaterial({
-          color: 0x00ff00
-        })
-      );
-
-      mesh.name = "x" + i;
-
-      const t = modelData.transform;
-
-      mesh.position.set(t.pos[0], t.pos[1], t.pos[2]);
-      mesh.rotation.set(t.rot[0], t.rot[1], t.rot[2]);
-      mesh.scale.set(t.scale[0], t.scale[1], t.scale[2]);
-
-      comp.add(mesh)
     }
     comp.visible = false
     scene.add(comp)
@@ -1050,20 +1079,21 @@ window.addEventListener('load', function() {
   let resComp = document.getElementById('compRes')
 
   function searchComp() {
+    console.log('s')
     resComp.style.display = 'block'
     document.getElementById('compBack').style.display = 'block'
     resComp.innerHTML = ''
 
-    let push = (data, name, related, index) => {
+    let push = (data, name, related, index, straight) => {
       let wrapper = document.createElement('div')
       let title = document.createElement('p')
       let system = document.createElement('p')
 
       if(!related) {
-        title.textContent = "(" + data.WUC + ") " + name
+        title.textContent = "(" + data.WUC.toUpperCase() + ") " + name
         system.textContent = data.section
       } else {
-        title.textContent = "(" + data.wuc + ") " + data.nomen
+        title.textContent = "(" + data.wuc.toUpperCase() + ") " + data.nomen
         system.textContent = name.section
       }
 
@@ -1073,16 +1103,20 @@ window.addEventListener('load', function() {
 
       wrapper.onclick = function() {
         // Clear Everything except this component
-        resComp.style.display = 'none'
-        document.getElementById('compBack').style.display = 'none'
-        for(let i = 0; i < comp.children.length; i++) {
-          if(comp.children[i].name.replace('x', '') != index) {
-            comp.children[i].visible = false
-          } else {
-            controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
-            camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
-            controls.update()
+        if(!straight) {
+          resComp.style.display = 'none'
+          document.getElementById('compBack').style.display = 'none'
+          for(let i = 0; i < comp.children.length; i++) {
+            if(comp.children[i].name.replace('x', '') != index) {
+              comp.children[i].visible = false
+            } else {
+              controls.target.set(components[index].modelData.transform.pos[0], components[index].modelData.transform.pos[1], components[index].modelData.transform.pos[2])
+              camera.position.set(components[index].modelData.transform.pos[0] + 5, components[index].modelData.transform.pos[1] + 5, components[index].modelData.transform.pos[2] + 5)
+              controls.update()
+            }
           }
+        } else {
+
         }
       }
 
@@ -1092,18 +1126,22 @@ window.addEventListener('load', function() {
     }
 
     for(let i = 0; i < components.length; i++) {
-      for(let u = 0; u < wuc.length; u++) {
-        if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
-          if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
-            push(components[i], wuc[u].desc, false, i)
-            break
+      if(components[i].type != 'noc') {
+        for(let u = 0; u < wuc.length; u++) {
+          if(formatWUC(wuc[u].code).toUpperCase() == components[i].WUC.toUpperCase()) {
+            if(wuc[u].desc.toUpperCase().includes(inpComp.value.toUpperCase()) || wuc[u].code.toUpperCase().includes(inpComp.value.toUpperCase())) {
+              push(components[i], wuc[u].desc, false, i)
+              break
+            }
           }
         }
-      }
-      for(let u = 0; u < components[i].related.length; u++) {
-        if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
-          push(components[i].related[u], components[i], true, i)
+        for(let u = 0; u < components[i].related.length; u++) {
+          if(components[i].related[u].nomen.toUpperCase().includes(inpComp.value.toUpperCase()) || components[i].related[u].wuc.toUpperCase().includes(inpComp.value.toUpperCase())) {
+            push(components[i].related[u], components[i], true, i)
+          }
         }
+      } else {
+        push(components[i], components[i], true, i, true)
       }
     }
   }
