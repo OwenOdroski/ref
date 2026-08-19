@@ -58,8 +58,14 @@
       <p id="ud-text"></p>
     </div>
     <div class="item">
-      <h3>Fuel Load calculator</h3>
+      <h3>Fuel calculator</h3>
+
       <div>
+        <button onclick="showPageFuel('service')" class="radio-button" style="border-bottom: 2px solid green;" id="service">Service</button>
+        <button onclick="showPageFuel('convert')" class="radio-button" id="convert">Convert</button>
+      </div><br>
+
+      <div id="serviceDiv">
         <select id="config">
           <option value="1">Slick</option>
           <option value="2">Wing Tanks</option>
@@ -73,6 +79,16 @@
         <input type="number" id="fuel-quantity" placeholder="Amount on Totalizer">
         <button onclick="fuelQuan()">Submit</button>
         <p id="fuel-result"></p>
+      </div>
+
+      <div id="convertDiv" style="display: none">
+        <p class="no-margin">Grade: <select id="type">
+          <option>JP-8</option>
+          <option>JP-4</option>
+        </select></p>
+
+        <p class="no-margin">Gallons: <input type="number" id="gallons" placeholder="Gallons"></p>
+        <p class="no-margin">Pounds: <input type="number" id="pounds" placeholder="Pounds"></p>
       </div>
     </div>
 
@@ -145,7 +161,18 @@
     </div>
 
     <div class="item">
-      <h3 id="julian"></h3>
+      <div>
+        <button onclick="showPage('today')" class="radio-button" style="border-bottom: 2px solid green;" id="today">Today</button>
+        <button onclick="showPage('date')" class="radio-button" id="date">Find by Date</button>
+      </div>
+      <div id="todayPage" style="margin-top: 16px">
+        <h3 id="julian"></h3>
+      </div>
+
+      <div id="datePage" style="display: none;"  style="margin-top: 16px">
+        <input type="date" id="find-date" onchange="findDate()">
+        <h3 id="julian2"></h3>
+      </div>
     </div>
 
     <!--Panel Lookup-->
