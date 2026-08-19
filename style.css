@@ -82,10 +82,8 @@ a:hover {
   position: fixed;
   top: 58px;
   left: 0;
-  right: 0;
-  bottom: 0;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: calc(100% - 58px);
   background: white;
   color: black;
   z-index: 99999;
@@ -187,6 +185,12 @@ a:hover {
 }
 .x-button {
   margin-top: 20px
+}
+#compBack {
+  position: fixed;
+  top: 0;
+  right: 0;
+  display: none
 }
 .item {
   background: linear-gradient(180deg, var(--surface), var(--surface-2));
@@ -326,7 +330,7 @@ a:hover {
   color: #000000;
   padding: 8px
 }
-#panelSettings {
+#panelSettings, #filterSettings {
   position: fixed;
   top: 0;
   left: 0;
