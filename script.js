@@ -24,6 +24,102 @@ if ('serviceWorker' in navigator && register) {
   });
 }
 
+// Fuel density in lb/gal
+window.addEventListener('load', function() {
+  const JP8_DENSITY = 6.8;
+  const JP4_DENSITY = 6.4;
+
+  const type = document.getElementById("type");
+  const gallons = document.getElementById("gallons");
+  const pounds = document.getElementById("pounds");
+
+  function getDensity() {
+    if (type.value === "JP-8") {
+      return JP8_DENSITY;
+    }
+
+    if (type.value === "JP-4") {
+      return JP4_DENSITY;
+    }
+  }
+
+
+  // Gallons -> Pounds
+  gallons.addEventListener("input", function () {
+    const density = getDensity();
+
+    if (gallons.value === "") {
+      pounds.value = "";
+      return;
+    }
+
+    pounds.value = (gallons.value * density).toFixed(1);
+  });
+
+
+  // Pounds -> Gallons
+  pounds.addEventListener("input", function () {
+    const density = getDensity();
+
+    if (pounds.value === "") {
+      gallons.value = "";
+      return;
+    }
+
+    gallons.value = (pounds.value / density).toFixed(1);
+  });
+
+
+  // Recalculate when fuel grade changes
+  type.addEventListener("change", function () {
+    const density = getDensity();
+
+    if (gallons.value !== "") {
+      pounds.value = (gallons.value * density).toFixed(1);
+    }
+  });
+})
+
+function showPageFuel(page) {
+  if(page == "service") {
+    document.getElementById("serviceDiv").style.display = 'block'
+    document.getElementById("convertDiv").style.display = 'none'
+    document.getElementById("service").style.borderBottom = '2px solid green'
+    document.getElementById("convert").style.borderBottom = '2px solid gray'
+  } else {
+    document.getElementById("serviceDiv").style.display = 'none'
+    document.getElementById("convertDiv").style.display = 'block'
+    document.getElementById("service").style.borderBottom = '2px solid gray'
+    document.getElementById("convert").style.borderBottom = '2px solid green'
+  }
+}
+
+function showPage(page) {
+  if(page == "today") {
+    document.getElementById("todayPage").style.display = 'block'
+    document.getElementById("datePage").style.display = 'none'
+    document.getElementById("today").style.borderBottom = '2px solid green'
+    document.getElementById("date").style.borderBottom = '2px solid gray'
+  } else {
+    document.getElementById("todayPage").style.display = 'none'
+    document.getElementById("datePage").style.display = 'block'
+    document.getElementById("today").style.borderBottom = '2px solid gray'
+    document.getElementById("date").style.borderBottom = '2px solid green'
+  }
+}
+
+function findDate() {
+  let ele = document.getElementById('find-date')
+  let julian = document.getElementById('julian2')
+  let date = new Date(ele.value)
+  let start = new Date(date.getFullYear(), 0, 0);
+  let diff = date - start;
+  let oneDay = 1000 * 60 * 60 * 24;
+  if(date.getFullYear() > 1947) {
+    julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
+  }
+}
+
 const DB_NAME = "AppDB";
 const STORE_NAME = "jsonStore";
 const DB_VERSION = 1;
