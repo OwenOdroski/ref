@@ -501,7 +501,8 @@ option {
 }
 #imds-results {
   white-space:pre-line;
-  padding: 16px
+  padding: 16px;
+  line-height: 1.8;
 }
 
 #imds-buttons {
