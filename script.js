@@ -1,7 +1,7 @@
 // Get DB
 let root = '.'
-let register = true
-let version = "4.1.1"
+let register = false
+let version = "4.1.2"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -98,26 +98,77 @@ function showPage(page) {
   if(page == "today") {
     document.getElementById("todayPage").style.display = 'block'
     document.getElementById("datePage").style.display = 'none'
+    document.getElementById("jcnPage").style.display = 'none'
+
     document.getElementById("today").style.borderBottom = '2px solid green'
     document.getElementById("date").style.borderBottom = '2px solid gray'
-  } else {
+    document.getElementById("jcn").style.borderBottom = '2px solid gray'
+  } else if(page == "date") {
     document.getElementById("todayPage").style.display = 'none'
     document.getElementById("datePage").style.display = 'block'
+    document.getElementById("jcnPage").style.display = 'none'
+
     document.getElementById("today").style.borderBottom = '2px solid gray'
     document.getElementById("date").style.borderBottom = '2px solid green'
+    document.getElementById("jcn").style.borderBottom = '2px solid gray'
+  } else {
+    document.getElementById("todayPage").style.display = 'none'
+    document.getElementById("datePage").style.display = 'none'
+    document.getElementById("jcnPage").style.display = 'block'
+
+    document.getElementById("today").style.borderBottom = '2px solid gray'
+    document.getElementById("date").style.borderBottom = '2px solid gray'
+    document.getElementById("jcn").style.borderBottom = '2px solid green'
   }
 }
 
 function findDate() {
-  let ele = document.getElementById('find-date')
-  let julian = document.getElementById('julian2')
-  let date = new Date(ele.value)
-  let start = new Date(date.getFullYear(), 0, 0);
-  let diff = date - start;
-  let oneDay = 1000 * 60 * 60 * 24;
-  if(date.getFullYear() > 1947) {
-    julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
-  }
+  const ele = document.getElementById("find-date");
+  const julian = document.getElementById("julian2");
+
+  const [year, month, day] = ele.value.split("-").map(Number);
+
+  const date = Date.UTC(year, month - 1, day);
+  const start = Date.UTC(year, 0, 0);
+
+  const oneDay = 86400000;
+  const dayOfYear = Math.floor((date - start) / oneDay);
+
+  julian.textContent = "Julian Date: " + String(dayOfYear).padStart(3, "0");
+}
+
+function findJCN() {
+    const str = String(
+        document.getElementById("find-jcn").value
+    ).padStart(5, "0");
+
+    if (document.getElementById("find-jcn").value.length !== 5) {document.getElementById("julian3").textContent = ""; return};
+
+    const year = 2000 + parseInt(str.slice(0, 2));
+    const dayOfYear = parseInt(str.slice(2));
+
+    const isLeap =
+        year % 4 === 0 &&
+        (year % 100 !== 0 || year % 400 === 0);
+
+    const maxDays = isLeap ? 366 : 365;
+
+    if (dayOfYear < 1 || dayOfYear > maxDays) {
+        document.getElementById("julian3").textContent =
+            "Invalid Julian Date";
+        return;
+    }
+
+    const date = new Date(year, 0, dayOfYear);
+
+    const clean = date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+    });
+
+    document.getElementById("julian3").textContent = clean;
 }
 
 const DB_NAME = "AppDB";
@@ -149,6 +200,12 @@ window.addEventListener("load", () => {
   let diff = date - start;
   let oneDay = 1000 * 60 * 60 * 24;
   julian.textContent = "Julian Date: " + Math.floor(diff / oneDay);
+  let year = date.getFullYear();
+  let month = String(date.getMonth() + 1).padStart(2, "0");
+  let day = String(date.getDate()).padStart(2, "0");
+
+  document.getElementById("find-date").value = `${year}-${month}-${day}`;
+  findDate()
 
   document.getElementById('app-version').innerHTML = "APP VERSION: " + version
 
@@ -493,17 +550,9 @@ async function loadPage(db, isWebAuthn) {
     let ch = document.getElementById('ch')
 
     for(let curr of checklists.names) {
-      let width = '45%'
-
-      if(window.innerWidth < 450) {
-        width = '100%'
-      } else if(window.innerWidth > 950) {
-        width = '23%'
-      }
-
       let button = document.createElement('button')
       button.setAttribute('onclick', `openChecklist("${curr.obj_name}")`)
-      button.style.width = width
+      button.class = "item-button"
       button.textContent = curr.name
       ch.appendChild(button)
     }
@@ -768,11 +817,19 @@ function startPanelScreen(hide) {
             comp.visible = true
             document.getElementById('comp-search').style.display = 'block'
             document.getElementById('searchBarPanels').style.display = 'none'
+
+            document.getElementById('filter-cockpit').style.display = 'none'
+            document.getElementById('filter-panel').style.display = 'none'
+            document.getElementById('filter-spatial').style.display = 'block'
           } else {
             makeOpaque(mesh, 1)
             comp.visible = false
             document.getElementById('comp-search').style.display = 'none'
             document.getElementById('searchBarPanels').style.display = 'block'
+
+            document.getElementById('filter-cockpit').style.display = 'none'
+            document.getElementById('filter-panel').style.display = 'block'
+            document.getElementById('filter-spatial').style.display = 'none'
           }
         });
       })
@@ -794,6 +851,10 @@ function startPanelScreen(hide) {
           stations.visible = false
           group2.visible = true
           comp.visible = false
+          document.getElementById('filter-cockpit').style.display = 'block'
+          document.getElementById('filter-panel').style.display = 'none'
+          document.getElementById('filter-spatial').style.display = 'none'
+
         } else {
           camera.position.set(100, 60, 100)
           controls.target.set(0, 0, 0)
@@ -805,9 +866,24 @@ function startPanelScreen(hide) {
           mesh.visible = true
           gltf.scene.visible = false
 
-          if(mode3d == 2) group.visible = true
-          if(mode3d == 0) stations.visible = true
-          if(mode3d == 3) comp.visible = true
+          if(mode3d == 2) {
+            group.visible = true
+            document.getElementById('filter-cockpit').style.display = 'none'
+            document.getElementById('filter-panel').style.display = 'block'
+            document.getElementById('filter-spatial').style.display = 'none'
+          }
+          if(mode3d == 0) {
+            stations.visible = true
+            document.getElementById('filter-cockpit').style.display = 'none'
+            document.getElementById('filter-panel').style.display = 'none'
+            document.getElementById('filter-spatial').style.display = 'none'
+          }
+          if(mode3d == 3) {
+            comp.visible = true
+            document.getElementById('filter-cockpit').style.display = 'none'
+            document.getElementById('filter-panel').style.display = 'none'
+            document.getElementById('filter-spatial').style.display = 'block'
+          }
           group2.visible = false
         }
       }
@@ -1165,6 +1241,48 @@ function startPanelScreen(hide) {
   }
   animate()
 }
+
+function panelFilterType() {
+  let type = document.getElementById('filter-panel-type')
+  let cv = [null, "Stress Panel", "Panel", "Door", "Quick Access Door"]
+
+  for(let i of group.children) {
+    if(type.value == 'All Panels') {
+      i.visible = true
+    } else if(allPanels[i.name].type.toUpperCase() == cv[type.selectedIndex].toUpperCase()) {
+      i.visible = true
+    } else {
+      i.visible = false
+    }
+  }
+}
+function spatialFilterType() {
+  let type = document.getElementById('filter-related')
+
+  for(let i in comp.children) {
+    let index = comp.children[i].name.slice(1)
+    if(type.selectedIndex == 0) {
+      comp.children[i].visible = true
+    } else if(components[index].section.toUpperCase() == type.value.toUpperCase()) {
+      comp.children[i].visible = true
+    } else {
+      comp.children[i].visible = false
+    }
+  }
+}
+
+window.addEventListener('load', function() {
+  let catagories = ['-- All Systems --', 'electrical', 'hydraulic', 'pneumatic', 'mechanical', 'airframe', 'fuel storage', 'fuel distribution', 'weapons', 'enviromental', 'engine', 'safety', 'avionics', 'maintenance']
+  let sl = document.getElementById('filter-related')
+
+  for(let i in catagories) {
+    let option = document.createElement('option')
+
+    option.textContent = catagories[i].toUpperCase()
+
+    sl.appendChild(option)
+  }
+})
 
 function formatWUC(text) {
   return text.slice(0, 5).toUpperCase()
