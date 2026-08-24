@@ -163,25 +163,31 @@
     <div class="item">
       <div>
         <button onclick="showPage('today')" class="radio-button" style="border-bottom: 2px solid green;" id="today">Today</button>
-        <button onclick="showPage('date')" class="radio-button" id="date">Find by Date</button>
+        <button onclick="showPage('date')" class="radio-button" id="date">Date</button>
+        <button onclick="showPage('jcn')" class="radio-button" id="jcn">JCN</button>
       </div>
       <div id="todayPage" style="margin-top: 16px">
         <h3 id="julian"></h3>
       </div>
 
       <div id="datePage" style="display: none;"  style="margin-top: 16px">
-        <input type="date" id="find-date" onchange="findDate()">
+        <input type="date" id="find-date" onchange="findDate()" style="color: white">
         <h3 id="julian2"></h3>
+      </div>
+
+      <div id="jcnPage" style="display: none;" style="margin-top: 16px">
+        <input type="text" id="find-jcn" onkeyup="findJCN()" style="color: white" placeholder="EX: 26001">
+        <h3 id="julian3"></h3>
       </div>
     </div>
 
     <!--Panel Lookup-->
     <div class="item tohide">
       <h3>Tools</h3>
-      <button onclick="startPanelScreen()" style="width: 130px">Panel Lookup</button>
-      <button onclick="openIMDS()" style="width: 130px">References</button>
-      <button onclick="openSystems()" style="width: 130px">Systems</button>
-      <button onclick="document.getElementById('H-content').style.display = 'block'">781H Carry Forward</button>
+      <button onclick="startPanelScreen()" class="item-button">Virtual Aircraft</button>
+      <button onclick="openIMDS()" class="item-button">References</button>
+      <button onclick="openSystems()" class="item-button">Systems</button>
+      <button onclick="document.getElementById('H-content').style.display = 'block'" class="item-button">781H Carry Forward</button>
     </div>
 
     <!-- Panel 3D wrapper -->
@@ -233,8 +239,27 @@
       <button onclick="document.getElementById('filterSettings').style.display = 'none'" style="font-size: 15px" class="x-button">✕</button>
       <h3>Filter Settings</h3>
 
-      <h4>Optional Equipment</h4>
-      <div id="noc-parts" style="width: 100%; height: 300px; background-color: lightgray; padding: 8px; overflow-y: auto"></div>
+      <!-- Spatial Index filter -->
+      <div id="filter-spatial"  style="display: none">
+        <p>Filter by related system: <select id="filter-related" onchange="spatialFilterType()"></select></p>
+        <h4>Optional Equipment</h4>
+        <div id="noc-parts" style="width: 100%; height: 300px; background-color: lightgray; padding: 8px; overflow-y: auto"></div>
+      </div>
+
+      <!-- Panel Chart filter -->
+      <div id="filter-panel">
+        <p>Filter by type: <select id="filter-panel-type" onchange="panelFilterType()">
+          <option>All Panels</option>
+          <option>Stress Panels</option>
+          <option>Panels</option>
+          <option>Doors</option>
+          <option>Quick Access Doors</option>
+        </select></p>
+      </div>
+
+      <div id="filter-cockpit"  style="display: none">
+
+      </div>
     </div>
 
     <!-- Cockpit popup -->
@@ -309,7 +334,7 @@
     </div>
 
     <!--Checklists-->
-    <div class="item tohide" id="ch">
+    <div class="item tohide button-cont" id="ch">
       <h3>Checklists</h3>
     </div>
 
