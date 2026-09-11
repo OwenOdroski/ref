@@ -292,7 +292,6 @@
     </div>
 
     <!-- Panel number popup -->
-
     <div id="gen-popup">
       <p id="gen-data"></p>
       <p id="gen-ref"></p>
@@ -358,6 +357,30 @@
       <div id="to-search-res" class="searchBar"></div>
     </div>
 
+    <!-- Phone Number Search -->
+    <div class="item tohide">
+      <h3>Phone Number Search</h3>
+      <p>Click to call</p>
+      <input type="text" id="searchPhone" onkeydown="searchPhoneNum()" onkeyup="searchPhoneNum()" placeholder="Shop/Ext">
+
+      <div id="phoneSearchBar" class="searchBar"></div>
+    </div>
+
+    <!-- Callsign Search -->
+    <div class="item tohide" id="cs-hide">
+      <h3>Callsign Search</h3>
+      <p>Who you're calling → Who you are</p>
+      <input type="text" id="searchCall" onkeydown="searchCallsign()" onkeyup="searchCallsign()" placeholder="Shop Name / Callsign">
+
+      <div id="callSearchBar" class="searchBar"></div>
+    </div>
+
+    <!-- In case of multiple extensions -->
+    <div class="popup item" id="ext-ask">
+      <h3>Choose Extension</h3>
+      <div id="ext"></div>
+    </div>
+
     <!--WUC Search-->
     <div class="item tohide" id="WUCwrapper">
       <h3>WUC Lookup</h3>
@@ -372,21 +395,6 @@
       <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="Work Unit Code">
 
       <div id="res-search-res" class="searchBar"></div>
-    </div>
-
-    <!-- Phone Number Search -->
-    <div class="item tohide">
-      <h3>Phone Number Search</h3>
-      <p>Click to call</p>
-      <input type="text" id="searchPhone" onkeydown="searchPhoneNum()" onkeyup="searchPhoneNum()" placeholder="Shop/Ext">
-
-      <div id="phoneSearchBar" class="searchBar"></div>
-    </div>
-
-    <!-- In case of multiple extensions -->
-    <div class="popup item" id="ext-ask">
-      <h3>Choose Extension</h3>
-      <div id="ext"></div>
     </div>
 
     <!--Torque Formula-->
