@@ -1741,13 +1741,17 @@ function searchCallsign() {
 
     if(name.toUpperCase().includes(inp) || sign.toUpperCase().includes(inp)) {
       let wrapper = document.createElement('div')
-      let body = document.createElement("p")
+      let body = document.createElement("strong")
+      let p = document.createElement('p')
 
-      body.textContent = name + ' — ' + sign
+      body.textContent = name
+      p.textContent = sign
 
       body.style = 'font-size: 16px; margin-bottom: 0px; margin-top: 0px'
+      p.style = 'font-size: 14px; margin-bottom: 16px; margin-top: 5px'
 
       wrapper.appendChild(body)
+      wrapper.appendChild(p)
       parent.appendChild(wrapper)
     }
   }
