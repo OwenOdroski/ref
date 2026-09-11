@@ -1,7 +1,7 @@
 // Get DB
 let root = '.'
-let register = false
-let version = "4.1.2"
+let register = true
+let version = "5.1.2"
 
 function isIphonePWA() {
   const isIOS = /iphone/i.test(navigator.userAgent);
@@ -492,11 +492,13 @@ async function loadPage(db, isWebAuthn) {
     components = data.system.components
 
     phone = data.local.db.phone
+    callsigns = data.local.db.callsign
     notes = data.local.db.notes
     checklists = data.local.db.checklists
 
     // Load 3D model in the background
     startPanelScreen(true)
+    searchCallsign()
 
     document.getElementById('enc-version').innerHTML = "ENC VERSION: " + data.version
 
@@ -1718,6 +1720,34 @@ function searchPhoneNum() {
 
       wrapper.appendChild(body)
       wrapper.appendChild(shop)
+      parent.appendChild(wrapper)
+    }
+  }
+}
+
+function searchCallsign() {
+  if(callsigns == undefined) {
+    document.getElementById('cs-hide').style.display = 'none'
+    return
+  }
+  let inp = document.getElementById("searchCall").value.toUpperCase()
+  let parent = document.getElementById("callSearchBar")
+
+  parent.innerHTML = ''
+
+  for(let i = 0; i < callsigns.length; i++) {
+    let name = callsigns[i].name
+    let sign = callsigns[i].sign
+
+    if(name.toUpperCase().includes(inp) || sign.toUpperCase().includes(inp)) {
+      let wrapper = document.createElement('div')
+      let body = document.createElement("p")
+
+      body.textContent = name + ' — ' + sign
+
+      body.style = 'font-size: 16px; margin-bottom: 0px; margin-top: 0px'
+
+      wrapper.appendChild(body)
       parent.appendChild(wrapper)
     }
   }
