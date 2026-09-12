@@ -78,7 +78,20 @@
         </select><br>
         <input type="number" id="fuel-quantity" placeholder="Amount on Totalizer">
         <button onclick="fuelQuan()">Submit</button>
-        <p id="fuel-result"></p>
+
+        <div style="height: 8px"></div>
+        <div style="display: inline; margin-left: 16px; margin-top: 160px">
+          <p id="fuel-result-jp8" style="display: inline">0</p>
+          <strong style="display: inline">G (JP-8)</strong>
+        </div>
+
+        <div style="height: 16px"></div>
+        <div style="display: inline;  margin-left: 16px">
+          <p id="fuel-result-jp4" style="display: inline">0</p>
+          <strong style="display: inline">G (JP-4)</strong>
+        </div>
+
+        <div style="height: 16px"></div>
       </div>
 
       <div id="convertDiv" style="display: none">
@@ -392,7 +405,7 @@
     <!--Reference Designator-->
     <div class="item tohide" id="refDesWrapper">
       <h3>Reference Designator Search</h3>
-      <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="Work Unit Code">
+      <input type="text" id="searchRefDes" onkeydown="searchRefDes()" onkeyup="searchRefDes()" placeholder="WUC / Reference Designator">
 
       <div id="res-search-res" class="searchBar"></div>
     </div>
