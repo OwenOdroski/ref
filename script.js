@@ -580,7 +580,8 @@ function fuelQuan() {
   let total = document.getElementById('fuel-quantity')
   let selected = document.getElementById('config')
   let model = document.getElementById('model')
-  let result = document.getElementById('fuel-result')
+  let jp8 = document.getElementById('fuel-result-jp8')
+  let jp4 = document.getElementById('fuel-result-jp4')
 
   let fullWeight = maxLoads.arr[JSON.parse(selected.value) - 1]
 
@@ -588,7 +589,8 @@ function fuelQuan() {
     fullWeight = fullWeight - 1250
   }
 
-  result.textContent = '~<strong>' + Math.floor(((fullWeight - JSON.parse(total.value)) / 6.8) * 100) / 100 + '</strong>G (JP-8) <br><br> ~<strong>' + Math.floor(((fullWeight - JSON.parse(total.value)) / 6.4) * 100) / 100 + '</strong>G (JP-4)'
+  jp8.textContent = Math.floor(((fullWeight - JSON.parse(total.value)) / 6.8) * 100) / 100
+  jp4.textContent = Math.floor(((fullWeight - JSON.parse(total.value)) / 6.4) * 100) / 100
   result.style = "font-size: 20px"
 }
 
