@@ -687,8 +687,19 @@ function startPanelScreen(hide) {
 
     for(let i = 0; i < components.length; i++) {
       if(components[i].type != 'noc') {
-        const geometry = new THREE.Geometry();
-        const modelData = components[i].modelData
+        let geometry = new THREE.Geometry();
+        let modelData, t
+
+        if(components[i].load_type == "copy-all") {
+          modelData = components[components[i].ref].modelData
+          t = components[i].transform
+        } else if(components[i].load_type == "copy-model") {
+          modelData = components[components[i].modelData.ref].modelData
+          t = components[i].modelData.transform
+        } else {
+          modelData = components[i].modelData
+          t = components[i].modelData.transform
+        }
 
         for(let v of modelData.vertices) {
           geometry.vertices.push(
@@ -713,8 +724,6 @@ function startPanelScreen(hide) {
         );
 
         mesh.name = "x" + i;
-
-        const t = modelData.transform;
 
         mesh.position.set(t.pos[0], t.pos[1], t.pos[2]);
         mesh.rotation.set(t.rot[0], t.rot[1], t.rot[2]);
@@ -1068,6 +1077,11 @@ function startPanelScreen(hide) {
             if(objects.length !== 0 && objects[0].object.name[0] == "x") {
               let index = objects[0].object.name.slice(1)
               let data = components[index]
+
+              if(components[index].load_type == "copy-all"){
+                data = components[components[index].ref]
+              }
+
               let nomen = document.getElementById('comp-nomen') // From WUC
               let system = document.getElementById('comp-system')
               let WUC = document.getElementById('comp-wuc')
