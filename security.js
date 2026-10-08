@@ -165,7 +165,6 @@ async function decryptJsonWithPasskey(savedBlob) {
   return JSON.parse(dec.decode(plaintext));
 }
 
-
 // ----- SECURITY ------
 async function decryptAES(base64Data, password) {
   const enc = new TextEncoder();
@@ -227,10 +226,11 @@ async function decryptAES(base64Data, password) {
 }
 
 function base64ToBytes(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
+  const pad = "=".repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + pad)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const raw = atob(b64);
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
 }
