@@ -549,15 +549,17 @@ async function loadPage(db, isWebAuthn) {
     if(wuc == undefined) document.getElementById('WUCwrapper').style.display = 'none'
     if(refDes == undefined) document.getElementById('refDesWrapper').style.display = 'none'
 
-    let ch = document.getElementById('ch')
+    let ch = document.getElementById('cl-result')
 
-    for(let curr of checklists.names) {
-      let button = document.createElement('button')
-      button.setAttribute('onclick', `openChecklist("${curr.obj_name}")`)
-      button.class = "item-button"
-      button.textContent = curr.name
-      ch.appendChild(button)
+    for(let i in checklists) {
+      let curr = checklists[i]
+      let p = document.createElement('p')
+      p.setAttribute('onclick', `openChecklist("${i}")`)
+      p.style = "font-size: 16px; margin-bottom: 0px; margin-top: 0px; padding: 4px"
+      p.textContent = curr.name
+      ch.appendChild(p)
     }
+
     loadList()
     if(wuc != undefined) searchWUC()
     if(refDes != undefined) searchRefDes()
@@ -1642,19 +1644,17 @@ function exportJSON() {
   console.log(JSON.stringify(devCockpit))
 }
 
-function openChecklist(type) {
+function openChecklist(index) {
   let wrapper = document.getElementById('checklists')
   let div = document.getElementById('checklist-items')
   let name = document.getElementById('cl-name')
   wrapper.style.display = 'block'
 
-  let checklist = checklists[type]
+  let checklist = checklists[index].steps
 
   div.textContent = ""
 
-  let res = checklists.names.find(obj => obj.obj_name === type)
-
-  name.textContent = res.name
+  name.textContent = checklists[index].name
 
   for(let i = 0; i < checklist.length; i++) {
     let button = document.createElement('div')
