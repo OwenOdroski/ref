@@ -98,7 +98,6 @@ async function searchPN() {
     loadNSN(search)
     document.getElementById('loadBox').style.display = 'none'
   } else {
-    alert("called")
     const response = await fetch("https://salvussystems.us/api/search", {
       method: "POST",
       headers: {
