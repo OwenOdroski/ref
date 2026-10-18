@@ -134,6 +134,7 @@ function loadNSN(arr) {
     let p = document.createElement('p')
 
     p.textContent = arr[i].niinData[0].FSC + "-" + formatNIIN(arr[i].NIIN) + " | " + arr[i].niinData[0].ITEM_NAME
+    p.style = "white-space: nowrap"
     p.onclick = function() {
       // When clicked, save for offline use
       let ls = localStorage.getItem('nsn')
