@@ -70,12 +70,10 @@ function searchLS(pn) {
     let ret = []
 
     for(let i in json) {
-      console.log(json[i].PART_NUMBER, pn.toUpperCase().replace(/\s+/g, ''))
       if(json[i].PART_NUMBER == pn.toUpperCase().replace(/\s+/g, '')) {
         ret.push(json[i])
       }
     }
-    console.log(ret)
 
     if(ret.length > 0) return ret
     if(ret.length == 0) return false
@@ -132,7 +130,7 @@ function loadNSN(arr) {
 
   document.getElementById('pn-inc').textContent = ""
   document.getElementById('pn-item-name').textContent = ""
-  document.getElementById('pn-sons').textContent = ""
+  document.getElementById('pn-sos').textContent = ""
 
   for(let i in arr) {
     let p = document.createElement('p')
