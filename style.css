@@ -65,6 +65,44 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Table */
+table {
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  color: black
+}
+
+th, td {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  text-align: left;
+  color: black
+}
+
+th {
+  background: white;
+  color: black;
+}
+
+tbody tr:nth-child(even) {
+  background: white;
+  color: black
+}
+
+.fullScreen {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  padding: 16px;
+  overflow-y: scroll;
+  background-color: white;
+  display: none;
+  color: black;
+}
+
 #cockpit-desc {
   position: fixed;
   top: 0px;
@@ -224,8 +262,24 @@ button.radio-button {
 .item small, .item .muted {
   color: var(--text-dim);
 }
+#loadBox {
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  display: none;
+  animation: spin 1.5s linear infinite;
+}
 
-#phoneSearchBar, #callSearchBar, #cl-result {
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#phoneSearchBar, #callSearchBar, #cl-result, #pnSearchBar {
   height: 230px;
   overflow-y: auto;
   border-radius: var(--radius-sm);
