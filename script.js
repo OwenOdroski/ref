@@ -130,6 +130,10 @@ async function searchPN() {
 function loadNSN(arr) {
   let wrapper = document.getElementById('pnSearchBar')
 
+  document.getElementById('pn-inc').textContent = ""
+  document.getElementById('pn-item-name').textContent = ""
+  document.getElementById('pn-sons').textContent = ""
+
   for(let i in arr) {
     let p = document.createElement('p')
 
@@ -189,7 +193,7 @@ function loadNSN(arr) {
       // Other information
       if(arr[i].niinData[0].END_ITEM_NAME !== "") document.getElementById('pn-item-name').textContent = "END ITEM NAME: " + arr[i].niinData[0].END_ITEM_NAME
       if(arr[i].niinData[0].SOS !== "") document.getElementById('pn-sos').textContent = "SOS: " + arr[i].niinData[0].SOS
-      if(arr[i].niinData[0].INC !== "")document.getElementById('pn-inc').textContent = "INC: " + arr[i].niinData[0].INC
+      if(arr[i].niinData[0].INC !== "") document.getElementById('pn-inc').textContent = "INC: " + arr[i].niinData[0].INC
 
     }
 
