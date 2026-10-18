@@ -395,6 +395,34 @@
       <div id="ext"></div>
     </div>
 
+    <!-- NSN / Part Number Lookup -->
+    <div class="item">
+      <h3>Part Number Lookup <div id="loadBox"></div></h3>
+      <p>Click for more information</p>
+      <input type="text" placeholder="Part Number" id="pnLookup">
+      <button onclick="searchPN()">Search</button>
+
+      <div id="pnSearchBar" class="searchBar"></div>
+    </div>
+
+    <div id="pnLUwrapper" class="fullScreen">
+      <button onclick="document.getElementById('pnLUwrapper').style.display = 'none'" class="x-button">✕</button>
+      <h2 id="pn-name"></h2>
+      <h3 id="pn-nsn"></h3>
+
+      <table id="partsTable">
+        <tbody id="tableBody"></tbody>
+      </table>
+
+      <h5>Cancelled NSNs</h5>
+      <div id="pn-cancel" style="border: 1px solid #000000; padding: 16px; width: fit-content"></div>
+
+      <h5>Other information</h5>
+      <p id="pn-item-name"></p>
+      <p id="pn-inc"></p>
+      <p id="pn-sos"></p>
+    </div>
+
     <!--WUC Search-->
     <div class="item tohide" id="WUCwrapper">
       <h3>WUC Lookup</h3>
