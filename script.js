@@ -20,7 +20,15 @@ if ('serviceWorker' in navigator && register) {
       updateViaCache: "none",
     })
 
-    //checkJSON()
+    // Load NSNs
+    try {
+      let nsn = localStorage.getItem("nsn")
+      if(nsn != null) {
+        loadNSN(JSON.parse(nsn))
+      }
+    } catch(err) {
+      console.log("ERROR LOADING SAVED NSNS: " + err)
+    }
   });
 }
 
@@ -55,35 +63,97 @@ function addRow(data) {
   document.getElementById("tableBody").appendChild(row);
 }
 
+function searchLS(pn) {
+  try {
+    let ls = localStorage.getItem('nsn')
+    let json = JSON.parse(ls)
+    let ret = []
+
+    for(let i in json) {
+      console.log(json[i].PART_NUMBER, pn.toUpperCase().replace(/\s+/g, ''))
+      if(json[i].PART_NUMBER == pn.toUpperCase().replace(/\s+/g, '')) {
+        ret.push(json[i])
+      }
+    }
+    console.log(ret)
+
+    if(ret.length > 0) return ret
+    if(ret.length == 0) return false
+  } catch(err) {
+    console.log(err)
+    return false
+  }
+}
+
 async function searchPN() {
   let data = document.getElementById('pnLookup')
   let wrapper = document.getElementById('pnSearchBar')
   document.getElementById('loadBox').style.display = "inline-block"
   wrapper.innerHTML = ""
 
-  const response = await fetch("https://salvussystems.us/api/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ PART_NUMBER: data.value.toUpperCase().replace(/\s+/g, '') }),
-  });
+  // First search the saved NSNs
+  let search = searchLS(data.value)
+  console.log(search)
+  if(search !== false) {
+    loadNSN(search)
+    document.getElementById('loadBox').style.display = 'none'
+  } else {
+    alert("called")
+    const response = await fetch("https://salvussystems.us/api/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ PART_NUMBER: data.value.toUpperCase().replace(/\s+/g, '') }),
+    });
 
-  if (!response.ok) {
-    alert(`HTTP ERROR ${response.status}`);
+    if (!response.ok) {
+      alert(`HTTP ERROR ${response.status}`);
+    }
+
+    let res = await response.json()
+    let arr = removeDup(res.data)
+
+    document.getElementById('loadBox').style.display = 'none'
+
+    if(arr.length == 0) {
+      let p = document.createElement('p')
+
+      p.textContent = "Not found"
+
+      wrapper.appendChild(p)
+    } else {
+      loadNSN(arr)
+    }
   }
+}
 
-  let res = await response.json()
-  let arr = removeDup(res.data)
-
-  document.getElementById('loadBox').style.display = 'none'
-  console.log(arr)
+function loadNSN(arr) {
+  let wrapper = document.getElementById('pnSearchBar')
 
   for(let i in arr) {
     let p = document.createElement('p')
 
     p.textContent = arr[i].niinData[0].FSC + "-" + formatNIIN(arr[i].NIIN) + " | " + arr[i].niinData[0].ITEM_NAME
     p.onclick = function() {
+      // When clicked, save for offline use
+      let ls = localStorage.getItem('nsn')
+
+      if(ls == null) {
+        localStorage.setItem("nsn", JSON.stringify([arr[i]]))
+      } else {
+        let json = JSON.parse(ls)
+
+        // Dont do duplicates
+        if(!searchLS(arr[i].PART_NUMBER)) {
+          json.unshift(arr[i])
+        }
+
+        if(json.length > 200) json.pop() // Only save the last 200
+
+        localStorage.setItem("nsn", JSON.stringify(json))
+      }
+
       document.getElementById('pnLUwrapper').style.display = "block"
       document.getElementById("tableBody").innerHTML = ""
 
@@ -100,6 +170,8 @@ async function searchPN() {
       if(arr[i].niinData[0].CANCELLED_NIIN !== "") {
         let split = arr[i].niinData[0].CANCELLED_NIIN.split(" ")
 
+        document.getElementById('pn-cancel').innerHTML = ""
+
         for(let u in split) {
           let s = document.createElement('span')
 
@@ -110,13 +182,14 @@ async function searchPN() {
           if(u < split.length - 1) document.getElementById('pn-cancel').appendChild(document.createElement("br"))
           if(u < split.length - 1) document.getElementById('pn-cancel').appendChild(document.createElement("br"))
         }
+      } else {
+        document.getElementById('pn-cancel').innerHTML = "None found"
       }
 
       // Other information
-      console.log(arr)
-      document.getElementById('pn-item-name').textContent = "END ITEM NAME: " + arr[i].niinData[0].END_ITEM_NAME
-      document.getElementById('pn-sos').textContent = "SOS: " + arr[i].niinData[0].SOS
-      document.getElementById('pn-inc').textContent = "INC: " + arr[i].niinData[0].INC
+      if(arr[i].niinData[0].END_ITEM_NAME !== "") document.getElementById('pn-item-name').textContent = "END ITEM NAME: " + arr[i].niinData[0].END_ITEM_NAME
+      if(arr[i].niinData[0].SOS !== "") document.getElementById('pn-sos').textContent = "SOS: " + arr[i].niinData[0].SOS
+      if(arr[i].niinData[0].INC !== "")document.getElementById('pn-inc').textContent = "INC: " + arr[i].niinData[0].INC
 
     }
 
