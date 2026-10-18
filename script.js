@@ -24,6 +24,106 @@ if ('serviceWorker' in navigator && register) {
   });
 }
 
+function formatNIIN(niin) {
+  return niin.slice(0, 2) + "-" + niin.slice(2, 5) + "-" + niin.slice(5, 9)
+}
+
+function removeDup(arr) {
+  let ck = []
+  let output = []
+
+  for(let i in arr) {
+    if(!ck.includes(arr[i].NIIN)) {
+      ck.push(arr[i].NIIN)
+      output.push(arr[i])
+    }
+  }
+
+  return output
+}
+
+
+function addRow(data) {
+  const row = document.createElement("tr");
+
+  for (const value of data) {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.appendChild(cell);
+  }
+
+  document.getElementById("tableBody").appendChild(row);
+}
+
+async function searchPN() {
+  let data = document.getElementById('pnLookup')
+  let wrapper = document.getElementById('pnSearchBar')
+  document.getElementById('loadBox').style.display = "inline-block"
+  wrapper.innerHTML = ""
+
+  const response = await fetch("https://salvussystems.us/api/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ PART_NUMBER: data.value.toUpperCase().replace(/\s+/g, '') }),
+  });
+
+  if (!response.ok) {
+    alert(`HTTP ERROR ${response.status}`);
+  }
+
+  let res = await response.json()
+  let arr = removeDup(res.data)
+
+  document.getElementById('loadBox').style.display = 'none'
+  console.log(arr)
+
+  for(let i in arr) {
+    let p = document.createElement('p')
+
+    p.textContent = arr[i].niinData[0].FSC + "-" + formatNIIN(arr[i].NIIN) + " | " + arr[i].niinData[0].ITEM_NAME
+    p.onclick = function() {
+      document.getElementById('pnLUwrapper').style.display = "block"
+      document.getElementById("tableBody").innerHTML = ""
+
+      document.getElementById('pn-name').textContent = arr[i].niinData[0].ITEM_NAME
+      document.getElementById('pn-nsn').textContent = arr[i].niinData[0].FSC + "-" + formatNIIN(arr[i].NIIN)
+
+      addRow(["CAGE CODE", arr[i].CAGE_CODE, "CAGE STATUS", arr[i].CAGE_STATUS])
+      addRow(["DAC", arr[i].DAC, "HCC", arr[i].HCC])
+      addRow(["MEDALS", arr[i].MEDALS, "MSDS", arr[i].MSDS])
+      addRow(["RNAAC", arr[i].RNAAC, "RNCC", arr[i].RNCC])
+      addRow(["RNFC", arr[i].RFNC, "RNJC", arr[i].RNJC])
+      addRow(["RNCS", arr[i].RNCS, "SADC", arr[i].SADC])
+
+      if(arr[i].niinData[0].CANCELLED_NIIN !== "") {
+        let split = arr[i].niinData[0].CANCELLED_NIIN.split(" ")
+
+        for(let u in split) {
+          let s = document.createElement('span')
+
+          s.textContent = arr[i].niinData[0].FSC + "-" + formatNIIN(split[u])
+
+          document.getElementById('pn-cancel').appendChild(s)
+
+          if(u < split.length - 1) document.getElementById('pn-cancel').appendChild(document.createElement("br"))
+          if(u < split.length - 1) document.getElementById('pn-cancel').appendChild(document.createElement("br"))
+        }
+      }
+
+      // Other information
+      console.log(arr)
+      document.getElementById('pn-item-name').textContent = "END ITEM NAME: " + arr[i].niinData[0].END_ITEM_NAME
+      document.getElementById('pn-sos').textContent = "SOS: " + arr[i].niinData[0].SOS
+      document.getElementById('pn-inc').textContent = "INC: " + arr[i].niinData[0].INC
+
+    }
+
+    wrapper.appendChild(p)
+  }
+}
+
 // Fuel density in lb/gal
 window.addEventListener('load', function() {
   const JP8_DENSITY = 6.8;
@@ -355,6 +455,7 @@ async function checkJSON() {
 
         if (!dec.ok) {
           if (dec.reason === "decrypt_failed") {
+            console.log(dec)
             alert("Wrong password or file corrupted/tampered.");
           } else {
             alert("Bad file format.");
